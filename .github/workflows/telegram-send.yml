@@ -26,11 +26,16 @@ jobs:
             exit 1
           fi
           python3 - << 'PY'
-          import json, os, sys, urllib.error, urllib.request
+          import json, os, re, sys, urllib.error, urllib.request
 
-          token = (os.environ.get("TELEGRAM_BOT_TOKEN") or "").strip()
-          chat_raw = (os.environ.get("TELEGRAM_CHAT_ID") or "").strip()
-          text = os.environ.get("TEXT") or ""
+          def clean_secret(s):
+              s = s or ""
+              s = re.sub(r"[\r\n\t\x00-\x1f\x7f]", "", s)
+              return s.strip()
+
+          token = clean_secret(os.environ.get("TELEGRAM_BOT_TOKEN"))
+          chat_raw = clean_secret(os.environ.get("TELEGRAM_CHAT_ID"))
+          text = (os.environ.get("TEXT") or "").strip()
 
           def fail(msg):
               print("::error::" + msg.replace("\n", " "))
