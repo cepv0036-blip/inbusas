@@ -22,21 +22,58 @@ jobs:
         run: |
           set -e
           if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
-            echo "::error::Definí los secretos TELEGRAM_BOT_TOKEN y TELEGRAM_CHAT_ID en el repositorio."
+            echo "::error::Faltan secretos. Settings → Secrets → Actions: TELEGRAM_BOT_TOKEN y TELEGRAM_CHAT_ID."
             exit 1
           fi
           python3 - << 'PY'
-          import json, os, urllib.request
-          token = os.environ["TELEGRAM_BOT_TOKEN"]
-          chat = os.environ["TELEGRAM_CHAT_ID"]
-          text = os.environ["TEXT"]
-          url = f"https://api.telegram.org/bot{token}/sendMessage"
-          data = json.dumps({"chat_id": chat, "text": text}).encode("utf-8")
-          req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
-          with urllib.request.urlopen(req, timeout=60) as r:
-            body = r.read().decode()
-          j = json.loads(body)
+          import json, os, sys, urllib.error, urllib.request
+
+          token = (os.environ.get("TELEGRAM_BOT_TOKEN") or "").strip()
+          chat_raw = (os.environ.get("TELEGRAM_CHAT_ID") or "").strip()
+          text = os.environ.get("TEXT") or ""
+
+          def fail(msg):
+              print("::error::" + msg.replace("\n", " "))
+              sys.exit(1)
+
+          if not text.strip():
+              fail("El texto del workflow está vacío. En Run workflow escribí un mensaje.")
+
+          try:
+              chat_id = int(chat_raw)
+          except ValueError:
+              fail("TELEGRAM_CHAT_ID debe ser un número entero (sin espacios ni letras). Ej: 6597963754")
+
+          url = "https://api.telegram.org/bot" + token + "/sendMessage"
+          payload = json.dumps({"chat_id": chat_id, "text": text}).encode("utf-8")
+          req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"})
+
+          try:
+              with urllib.request.urlopen(req, timeout=60) as r:
+                  body = r.read().decode("utf-8", errors="replace")
+          except urllib.error.HTTPError as e:
+              err_body = e.read().decode("utf-8", errors="replace") if e.fp else str(e)
+              fail("HTTP " + str(e.code) + " Telegram: " + err_body[:500])
+          except urllib.error.URLError as e:
+              fail("Red / URL: " + str(e.reason if hasattr(e, "reason") else e))
+
+          try:
+              j = json.loads(body)
+          except json.JSONDecodeError:
+              fail("Respuesta no JSON: " + body[:300])
+
           if not j.get("ok"):
-            raise SystemExit(f"Telegram API: {body}")
-          print("OK:", j.get("result", {}).get("message_id"))
+              desc = j.get("description") or body[:500]
+              ec = j.get("error_code")
+              hints = []
+              dlow = str(desc).lower()
+              if ec == 401 or "unauthorized" in dlow:
+                  hints.append("Token inválido o revocado: en BotFather un token nuevo y actualizá TELEGRAM_BOT_TOKEN.")
+              if "chat not found" in dlow or "chat_id is empty" in dlow:
+                  hints.append("Escribile al bot en Telegram /start y revisá TELEGRAM_CHAT_ID (número sin comillas).")
+              if "blocked" in dlow:
+                  hints.append("Desbloqueá el bot en Telegram.")
+              fail("Telegram: " + str(desc) + (" | " + " ".join(hints) if hints else ""))
+
+          print("OK, message_id:", j.get("result", {}).get("message_id"))
           PY
