@@ -1,5 +1,5 @@
-# Enviá un mensaje a Telegram desde la pestaña Actions → "Telegram send" → Run workflow.
-# Secretos en el repo: Settings → Secrets → TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
+# Actions → este workflow → Run workflow (texto) → Telegram.
+# Secretos: TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
 name: Telegram send
 
 on:
@@ -14,6 +14,8 @@ jobs:
   send:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+
       - name: Enviar mensaje por Bot API
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
@@ -21,64 +23,8 @@ jobs:
           TEXT: ${{ github.event.inputs.text }}
         run: |
           set -e
-          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
-            echo "::error::Faltan secretos. Settings → Secrets → Actions: TELEGRAM_BOT_TOKEN y TELEGRAM_CHAT_ID."
+          if [ -z "${TELEGRAM_BOT_TOKEN:-}" ] || [ -z "${TELEGRAM_CHAT_ID:-}" ]; then
+            echo "::error::Definí los secretos TELEGRAM_BOT_TOKEN y TELEGRAM_CHAT_ID."
             exit 1
           fi
-          python3 - << 'PY'
-          import json, os, re, sys, urllib.error, urllib.request
-
-          def clean_secret(s):
-              s = s or ""
-              s = re.sub(r"[\r\n\t\x00-\x1f\x7f]", "", s)
-              return s.strip()
-
-          token = clean_secret(os.environ.get("TELEGRAM_BOT_TOKEN"))
-          chat_raw = clean_secret(os.environ.get("TELEGRAM_CHAT_ID"))
-          text = (os.environ.get("TEXT") or "").strip()
-
-          def fail(msg):
-              print("::error::" + msg.replace("\n", " "))
-              sys.exit(1)
-
-          if not text.strip():
-              fail("El texto del workflow está vacío. En Run workflow escribí un mensaje.")
-
-          try:
-              chat_id = int(chat_raw)
-          except ValueError:
-              fail("TELEGRAM_CHAT_ID debe ser un número entero (sin espacios ni letras). Ej: 6597963754")
-
-          url = "https://api.telegram.org/bot" + token + "/sendMessage"
-          payload = json.dumps({"chat_id": chat_id, "text": text}).encode("utf-8")
-          req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"})
-
-          try:
-              with urllib.request.urlopen(req, timeout=60) as r:
-                  body = r.read().decode("utf-8", errors="replace")
-          except urllib.error.HTTPError as e:
-              err_body = e.read().decode("utf-8", errors="replace") if e.fp else str(e)
-              fail("HTTP " + str(e.code) + " Telegram: " + err_body[:500])
-          except urllib.error.URLError as e:
-              fail("Red / URL: " + str(e.reason if hasattr(e, "reason") else e))
-
-          try:
-              j = json.loads(body)
-          except json.JSONDecodeError:
-              fail("Respuesta no JSON: " + body[:300])
-
-          if not j.get("ok"):
-              desc = j.get("description") or body[:500]
-              ec = j.get("error_code")
-              hints = []
-              dlow = str(desc).lower()
-              if ec == 401 or "unauthorized" in dlow:
-                  hints.append("Token inválido o revocado: en BotFather un token nuevo y actualizá TELEGRAM_BOT_TOKEN.")
-              if "chat not found" in dlow or "chat_id is empty" in dlow:
-                  hints.append("Escribile al bot en Telegram /start y revisá TELEGRAM_CHAT_ID (número sin comillas).")
-              if "blocked" in dlow:
-                  hints.append("Desbloqueá el bot en Telegram.")
-              fail("Telegram: " + str(desc) + (" | " + " ".join(hints) if hints else ""))
-
-          print("OK, message_id:", j.get("result", {}).get("message_id"))
-          PY
+          python3 .github/scripts/telegram_send.py
