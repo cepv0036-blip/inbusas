@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "commands": {
+    "start": {
+      "reply": "Bot activo. Los textos de /help y demás comandos los editás en GitHub en telegram/commands.json."
+    },
+    "help": {
+      "reply": "Comandos: /start /help /id /reload — La config se puede cargar desde CONFIG_URL (raw de GitHub)."
+    },
+    "id": {
+      "reply": "Tu chat_id aparece abajo. Copialo en el secret TELEGRAM_CHAT_ID de GitHub.",
+      "include_chat_id": true
+    },
+    "reload": {
+      "reply": "Config recargada desde GitHub (si CONFIG_URL está definido).",
+      "action": "reload_config"
+    }
+  }
+}

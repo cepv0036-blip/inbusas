@@ -1,0 +1,11 @@
+{
+  "name": "servidor-telegram-bot",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node bot.mjs"
+  }
+}

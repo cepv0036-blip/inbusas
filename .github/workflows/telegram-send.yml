@@ -1,0 +1,42 @@
+# Enviá un mensaje a Telegram desde la pestaña Actions → "Telegram send" → Run workflow.
+# Secretos en el repo: Settings → Secrets → TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
+name: Telegram send
+
+on:
+  workflow_dispatch:
+    inputs:
+      text:
+        description: Texto a enviar al chat configurado
+        required: true
+        type: string
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enviar mensaje por Bot API
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TEXT: ${{ github.event.inputs.text }}
+        run: |
+          set -e
+          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+            echo "::error::Definí los secretos TELEGRAM_BOT_TOKEN y TELEGRAM_CHAT_ID en el repositorio."
+            exit 1
+          fi
+          python3 - << 'PY'
+          import json, os, urllib.request
+          token = os.environ["TELEGRAM_BOT_TOKEN"]
+          chat = os.environ["TELEGRAM_CHAT_ID"]
+          text = os.environ["TEXT"]
+          url = f"https://api.telegram.org/bot{token}/sendMessage"
+          data = json.dumps({"chat_id": chat, "text": text}).encode("utf-8")
+          req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
+          with urllib.request.urlopen(req, timeout=60) as r:
+            body = r.read().decode()
+          j = json.loads(body)
+          if not j.get("ok"):
+            raise SystemExit(f"Telegram API: {body}")
+          print("OK:", j.get("result", {}).get("message_id"))
+          PY

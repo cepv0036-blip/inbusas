@@ -1,0 +1,18 @@
+Telegram + GitHub (resumen)
+===========================
+
+1) Crear bot con @BotFather → token → secret TELEGRAM_BOT_TOKEN en GitHub.
+
+2) Obtener TELEGRAM_CHAT_ID: ejecutá el bot localmente (npm start en /telegram),
+   escribí /id en Telegram y copiá el número al secret TELEGRAM_CHAT_ID.
+
+3) Comandos que responde el bot: editá telegram/commands.json en el repo y hacé push.
+   Si el bot corre en un servidor, podés poner CONFIG_URL apuntando al raw de ese archivo
+   en GitHub para que al cambiar el JSON en la rama publicada se actualice sin redeploy:
+   https://raw.githubusercontent.com/cepv0036-blip/inbusas/main/telegram/commands.json
+
+4) Enviar mensajes desde GitHub sin el bot de escucha: Actions → "Telegram send" →
+   Run workflow → escribí el texto. Usa los mismos secretos del paso 1-2.
+
+5) Dónde corre el bot: GitHub Actions no mantiene procesos largos; necesitás un host
+   con Node 18+ (Railway, Fly.io, VPS, tu PC con npm start) con TELEGRAM_BOT_TOKEN.
