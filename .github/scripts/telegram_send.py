@@ -8,44 +8,50 @@ import urllib.error
 import urllib.request
 
 
-def clean_token(s: str) -> str:
-    """Token BotFather: solo ASCII imprimible típico (evita \\n pegados al pegar en GitHub)."""
-    s = s or ""
-    s = re.sub(r"[^\w\-:]", "", s)
-    return s
-
-
-def clean_chat_id(s: str) -> str:
-    s = (s or "").strip()
-    s = re.sub(r"[^\d\-]", "", s)
-    return s
-
-
 def fail(msg: str) -> None:
     print("::error::" + msg.replace("\n", " "))
     sys.exit(1)
 
 
+def read_secret_first_line(env_key: str) -> str:
+    """
+    GitHub a veces guarda el secreto con Enter al final (o varias líneas).
+    Telegram exige el token en la URL sin caracteres de control.
+    """
+    raw = os.environ.get(env_key) or ""
+    for line in raw.replace("\r\n", "\n").replace("\r", "\n").split("\n"):
+        t = line.strip()
+        if not t:
+            continue
+        # Solo ASCII visible (32-126), típico del token BotFather
+        return "".join(ch for ch in t if 32 <= ord(ch) <= 126)
+    return ""
+
+
 def main() -> None:
-    token = clean_token(os.environ.get("TELEGRAM_BOT_TOKEN", ""))
-    chat_raw = clean_chat_id(os.environ.get("TELEGRAM_CHAT_ID", ""))
+    token = read_secret_first_line("TELEGRAM_BOT_TOKEN")
+    chat_raw = read_secret_first_line("TELEGRAM_CHAT_ID")
+    chat_raw = "".join(ch for ch in chat_raw if ch.isdigit() or ch == "-")
     text = (os.environ.get("TEXT") or "").strip()
 
     if not token or not chat_raw:
-        fail("Faltan TELEGRAM_BOT_TOKEN o TELEGRAM_CHAT_ID (revisá secretos en GitHub).")
+        fail("Faltan TELEGRAM_BOT_TOKEN o TELEGRAM_CHAT_ID.")
     if not text:
         fail("El texto del workflow está vacío.")
 
-    if ":" not in token or not re.match(r"^\d+:[A-Za-z0-9_-]+$", token):
+    if "\n" in token or "\r" in token:
+        fail("Bug interno: token con salto de línea tras limpiar. Reportá el log.")
+
+    if not re.match(r"^\d+:[A-Za-z0-9_-]+$", token):
         fail(
-            "TELEGRAM_BOT_TOKEN no tiene formato esperado (123456:ABC...). "
-            "Sin espacios ni saltos de línea; pegalo de nuevo en Secrets."
+            "TELEGRAM_BOT_TOKEN inválido tras limpiar. En GitHub → Secrets → "
+            "pegá UNA sola línea desde BotFather (número:letras)."
         )
 
     try:
         chat_id = int(chat_raw)
     except ValueError:
-        fail("TELEGRAM_CHAT_ID debe ser un número entero, ej. 6597963754")
+        fail("TELEGRAM_CHAT_ID debe ser solo dígitos (y opcional - para grupos).")
 
     url = "https://api.telegram.org/bot" + token + "/sendMessage"
     payload = json.dumps({"chat_id": chat_id, "text": text}).encode("utf-8")
@@ -71,7 +77,7 @@ def main() -> None:
         hints = []
         dlow = str(desc).lower()
         if ec == 401 or "unauthorized" in dlow:
-            hints.append("Token inválido: nuevo token en BotFather y actualizá el secreto.")
+            hints.append("Token inválido: nuevo en BotFather y actualizá el secreto.")
         if "chat not found" in dlow or "chat_id is empty" in dlow:
             hints.append("Mandá /start al bot y revisá TELEGRAM_CHAT_ID.")
         if "blocked" in dlow:

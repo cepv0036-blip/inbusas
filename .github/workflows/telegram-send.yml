@@ -16,6 +16,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Comprobar que corre el script del repo
+        run: |
+          set -e
+          if [ ! -f .github/scripts/telegram_send.py ]; then
+            echo "::error::No está .github/scripts/telegram_send.py. Hacé git pull y git push desde tu PC en la rama default del repo."
+            exit 1
+          fi
+          echo "::notice::OK: se usará .github/scripts/telegram_send.py (si el error dice stdin, estás viendo una corrida vieja o otro repo)."
+
       - name: Enviar mensaje por Bot API
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
